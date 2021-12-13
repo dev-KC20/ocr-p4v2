@@ -3,7 +3,7 @@
 """ Player who will participate to the tournament.
     """
 
-from uuid import uuid4
+# from uuid import uuid4
 
 # from tinydb import TinyDB  # , Query
 
@@ -23,6 +23,7 @@ class Player:
         initial_ranking,
         point_earned=0,
         opponent_met=None,
+        player_id=0
     ):
         self.__name = name
         self.__firstname = firstname
@@ -30,7 +31,7 @@ class Player:
         self.__gender = gender
         self.__initial_ranking = initial_ranking
         self.__score = point_earned
-        self.__id = str(uuid4())
+        self.__id = player_id #str(uuid4())
         self.__opponent_met = opponent_met
         self._formated_player = f""" {self.__firstname} {self.__name}, né\
              {self.__birthdate} {self.__initial_ranking} ELO,
@@ -84,7 +85,7 @@ class Player:
         Save uses the fact that a class has a description as dictionnary
         the meta structure record is avoided.
         """
-        Database().set_table_all(
+        Database().set_table(
             DB_TABLE_PLAYER, new_player.serialize_player()
         )
 
@@ -122,6 +123,7 @@ class Players:
                     joueur["initial_ranking"],
                     joueur["score"],
                     joueur["opponent_met"],
+                    joueur["player_id"]
                 )
             )
         print(f" {len(self.__players_known)} joueurs chargés")

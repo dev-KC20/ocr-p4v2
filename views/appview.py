@@ -87,7 +87,7 @@ class PlayerView(View):
     def prompt_for_player(self):
         """Prompt for details."""
         while not self.play_once:
-            # print(CLEAR_TERMINAL)
+            print(CLEAR_TERMINAL)
             line_len = 50
             print("*" * line_len)
             print(" Créer un joueur ")
@@ -117,6 +117,38 @@ class PlayerView(View):
         return name, firstname, birthdate, gender, initial_ranking
 
 
+    def prompt_for_initial_ranking(self):
+        """Prompt for details."""
+        while not self.play_once:
+            # print(CLEAR_TERMINAL)
+            line_len = 50
+            print("*" * line_len)
+            print(" Mettre à jour ELO ")
+            print("*" * line_len)
+            print()
+
+            name = View().prompt("tapez le nom du joueur", "str", "Martin")
+            firstname = View().prompt(
+                "tapez le prénom du joueur : ", "str", "Paul"
+            )
+            birthdate = View().prompt(
+                "sa date de naissance (JJ/MM/AAAA): ",
+                "date",
+                datetime.date(2000, 1, 1).strftime("%d/%m/%Y"),
+            )
+            gender = View().prompt(
+                "si indispensable, préciser le genre: ",
+                "str",
+                GENDER[0],
+                GENDER,
+            )
+            initial_ranking = View().prompt("son classement ELO : ", "int", 800)
+            print()
+            print("*" * line_len)
+            self.play_once = View().prompt_to_exit()
+
+        return name, firstname, birthdate, gender, initial_ranking
+
 class PlayersView(View):
     def __init__(self):
         self.play_once = False
@@ -125,8 +157,7 @@ class PlayersView(View):
         """ """
         while not self.play_once:
             print(" Liste des joueurs de la base")
-            # print(player_set)
             for joueur in player_set:
-                # if joueur is not None:
-                print(joueur)
+                if joueur is not None:
+                    print(joueur)
             self.play_once = View().prompt_to_exit()
