@@ -2,11 +2,6 @@
 # coding: utf-8
 """ Player who will participate to the tournament.
     """
-
-# from uuid import uuid4
-
-# from tinydb import TinyDB  # , Query
-
 from utils.database import Database
 from utils.constants import DB_TABLE_PLAYER
 
@@ -31,19 +26,22 @@ class Player:
         self.__gender = gender
         self.__initial_ranking = initial_ranking
         self.__score = point_earned
-        self.__id = player_id  # str(uuid4())
+        self.__id = player_id
         self.__opponent_met = opponent_met
-        self._formated_player = f"""id: {self.__id}: {self.__firstname} {self.__name}, né {self.__birthdate} {self.__initial_ranking} ELO, score: {self.__score} genre: {self.__gender} """
+        self._formated_player = f"""id: {self.__id}: {self.__firstname} {self.__name},\
+             né {self.__birthdate} {self.__initial_ranking} ELO, score: {self.__score} genre:\
+                  {self.__gender} """
 
     def get_name(self):
-        """ """
+        """name getter"""
         return self.__name
 
     def get_id(self):
-        """ """
+        """player_id getter"""
         return self.__id
 
     def get_ranking(self):
+        """player rank getter"""
         return self.__initial_ranking
 
     def set_ranking(self, ranking):
@@ -51,6 +49,7 @@ class Player:
         self.__initial_ranking = ranking
 
     def get_opponent_met(self):
+        """list of opponent the player already met getter"""
         return self.__opponent_met
 
     def set_opponent_met(self, opponent):
@@ -84,10 +83,13 @@ class Player:
         the meta structure record is avoided.
         """
         if player_id is None:
-            Database().set_table(DB_TABLE_PLAYER, new_player.serialize_player())
+            Database().set_table(
+                DB_TABLE_PLAYER, new_player.serialize_player()
+            )
         else:
-            Database().set_table(DB_TABLE_PLAYER, new_player.serialize_player(), player_id)
-
+            Database().set_table(
+                DB_TABLE_PLAYER, new_player.serialize_player(), player_id
+            )
 
 
 class Players:

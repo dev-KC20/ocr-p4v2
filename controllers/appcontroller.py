@@ -6,8 +6,9 @@ But also manage a list of known players
 """
 from utils.menu import Menu
 from models.player import Players, Player
+from models.tournament import Tournament, Tournaments
 from views.menuview import MenuView
-from views.appview import PlayersView, PlayerView
+from views.appview import PlayersView, PlayerView, TournamentView, TournamentsView
 
 
 class AppController:
@@ -54,6 +55,7 @@ class MenuPlayerController:
             player_list_db = Players()
             player_list_db.load_players()
             PlayersView().print_players(player_list_db.get_list_of_players())
+
         if chosen_option == "20":
             player_list_db = Players()
             player_list_db.load_players()
@@ -75,6 +77,44 @@ class MenuPlayerController:
         return next_menu
 
 
+class MenuTournamentController:
+    def __init__(self):
+        self.menu = None
+
+    def run(self):
+        """ """
+        self.menu = Menu("Gérer les tournois")
+
+        for key, value in MENU_TOURNAMENT.items():
+            self.menu.add_menu(key, value)
+        chosen_option = MenuView(self.menu).get_user_input()
+        if chosen_option == "10":
+            tournament_list_db = Tournaments()
+            tournament_list_db.load_tournaments()
+            tournaments_view = TournamentsView()
+            tournaments_view.print_tournaments(tournament_list_db.get_list_of_tournaments())
+
+
+        if chosen_option == "20":
+            tournament_view = TournamentView()
+            new_tournament = Tournament(*tournament_view.prompt_for_tournament())
+            new_tournament.save_tournament(new_tournament)
+
+        if chosen_option == "20":
+            pass
+            # tournament_list_db = tournaments()
+            # tournament_list_db.load_tournaments()
+            # tournament_view = tournamentView()
+            # new_tournament = tournament(*tournament_view.prompt_for_tournament())
+            # tournament_list_db.add_tournament_to_list(new_tournament)
+            # new_tournament.save_tournament(new_tournament)
+        if chosen_option == "30":
+            pass
+
+        next_menu = self.menu.get_action(chosen_option)
+        return next_menu
+
+
 class MenuExitController:
     def __init__(self):
         self.menu = None
@@ -87,6 +127,7 @@ class MenuExitController:
 
 MENU = {
     "10": ("Gérer les joueurs", MenuPlayerController()),
+    "20": ("Gérer les tournois", MenuTournamentController()),
     "90": ("Quitter l'application", MenuExitController()),
 }
 
@@ -94,6 +135,14 @@ MENU_PLAYER = {
     "10": ("Afficher les joueurs en base", MenuPlayerController()),
     "20": ("Ajouter un joueur en base", MenuPlayerController()),
     "30": ("Mettre à jour ELO ", MenuPlayerController()),
+    "80": ("Retour à l'accueil", MenuController()),
+    "90": ("Quitter l'application", MenuExitController()),
+}
+MENU_TOURNAMENT = {
+    "10": ("Afficher les tournois", MenuTournamentController()),
+    "20": ("Créer un tournoi", MenuTournamentController()),
+    "30": ("Ouvrir un tournoi", MenuTournamentController()),
+    "40": ("Mettre à jour les résultats", MenuTournamentController()),
     "80": ("Retour à l'accueil", MenuController()),
     "90": ("Quitter l'application", MenuExitController()),
 }
