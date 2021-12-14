@@ -23,7 +23,7 @@ class Player:
         initial_ranking,
         point_earned=0,
         opponent_met=None,
-        player_id=0
+        player_id=0,
     ):
         self.__name = name
         self.__firstname = firstname
@@ -31,11 +31,9 @@ class Player:
         self.__gender = gender
         self.__initial_ranking = initial_ranking
         self.__score = point_earned
-        self.__id = player_id #str(uuid4())
+        self.__id = player_id  # str(uuid4())
         self.__opponent_met = opponent_met
-        self._formated_player = f""" {self.__firstname} {self.__name}, né\
-             {self.__birthdate} {self.__initial_ranking} ELO,
-             score: {self.__score} genre: {self.__gender} id: {self.__id} """
+        self._formated_player = f"""id: {self.__id}: {self.__firstname} {self.__name}, né {self.__birthdate} {self.__initial_ranking} ELO, score: {self.__score} genre: {self.__gender} """
 
     def get_name(self):
         """ """
@@ -77,17 +75,19 @@ class Player:
             "initial_ranking": self.__initial_ranking,
             "score": self.__score,
             "opponent_met": self.__opponent_met,
-            "player_id": self.__id
+            "player_id": self.__id,
         }
 
-    def save_player(self, new_player):
+    def save_player(self, new_player, player_id=None):
         """Save one player
         Save uses the fact that a class has a description as dictionnary
         the meta structure record is avoided.
         """
-        Database().set_table(
-            DB_TABLE_PLAYER, new_player.serialize_player()
-        )
+        if player_id is None:
+            Database().set_table(DB_TABLE_PLAYER, new_player.serialize_player())
+        else:
+            Database().set_table(DB_TABLE_PLAYER, new_player.serialize_player(), player_id)
+
 
 
 class Players:
@@ -109,6 +109,14 @@ class Players:
         """list of all players"""
         return self.__players_known
 
+    def get_player_by_id(self, player_id):
+        """return one player based on his id"""
+        found_player = None
+        for player in self.__players_known:
+            if player.get_id() == player_id:
+                found_player = player
+        return found_player
+
     def load_players(self):
         """Load saved players into Players()"""
         __serialized_players = []
@@ -123,22 +131,22 @@ class Players:
                     joueur["initial_ranking"],
                     joueur["score"],
                     joueur["opponent_met"],
-                    joueur["player_id"]
+                    joueur["player_id"],
                 )
             )
         print(f" {len(self.__players_known)} joueurs chargés")
 
-    def save_players(self):
-        """Save players
-        Save uses the fact that a class has a description as dictionnary
-        the meta structure record is avoided.
-        """
+    # def save_players(self):
+    #     """Save players
+    #     Save uses the fact that a class has a description as dictionnary
+    #     the meta structure record is avoided.
+    #     """
 
-        _serialized_players = []
-        # _self.players_table.truncate()
-        for joueur in self.__players_known:
-            # only append data records
-            if joueur.__dict__.get("_name"):
-                _serialized_players.append(joueur.__dict__)
-        Database().set_table_all(DB_TABLE_PLAYER, _serialized_players)
-        print(f" {len(_serialized_players)} joueurs sauvés")
+    #     _serialized_players = []
+    #     # _self.players_table.truncate()
+    #     for joueur in self.__players_known:
+    #         # only append data records
+    #         if joueur.__dict__.get("_name"):
+    #             _serialized_players.append(joueur.__dict__)
+    #     Database().set_table_all(DB_TABLE_PLAYER, _serialized_players)
+    #     print(f" {len(_serialized_players)} joueurs sauvés")

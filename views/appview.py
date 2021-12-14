@@ -11,9 +11,8 @@ from models.player import Player
 
 
 class View:
-
-    def prompt(self,
-        text, type_response, default_response=None, closed_response=None
+    def prompt(
+        self, text, type_response, default_response=None, closed_response=None
     ):
         """Attend une réponse conforme de l'utilisateur à l'input.
         text: le texte d'invite à afficher à l'utilisateur
@@ -71,7 +70,7 @@ class View:
     def prompt_to_exit(self):
 
         exit_reply = View().prompt(
-            "Voulez-vous quittez? (Y/N)",
+            "(Y) pour valider",
             "str",
             "Y",
             YESORNO,
@@ -109,15 +108,16 @@ class PlayerView(View):
                 GENDER[0],
                 GENDER,
             )
-            initial_ranking = View().prompt("son classement ELO : ", "int", 800)
+            initial_ranking = View().prompt(
+                "son classement ELO : ", "int", 800
+            )
             print()
             print("*" * line_len)
             self.play_once = View().prompt_to_exit()
 
         return name, firstname, birthdate, gender, initial_ranking
 
-
-    def prompt_for_initial_ranking(self):
+    def prompt_for_new_ranking(self):
         """Prompt for details."""
         while not self.play_once:
             # print(CLEAR_TERMINAL)
@@ -126,28 +126,14 @@ class PlayerView(View):
             print(" Mettre à jour ELO ")
             print("*" * line_len)
             print()
-
-            name = View().prompt("tapez le nom du joueur", "str", "Martin")
-            firstname = View().prompt(
-                "tapez le prénom du joueur : ", "str", "Paul"
-            )
-            birthdate = View().prompt(
-                "sa date de naissance (JJ/MM/AAAA): ",
-                "date",
-                datetime.date(2000, 1, 1).strftime("%d/%m/%Y"),
-            )
-            gender = View().prompt(
-                "si indispensable, préciser le genre: ",
-                "str",
-                GENDER[0],
-                GENDER,
-            )
-            initial_ranking = View().prompt("son classement ELO : ", "int", 800)
+            player_id = View().prompt("entrez l'id du joueur", "int", 1)
+            player_elo = View().prompt("entrez le nouvel ELO du joueur : ", "int",0)
             print()
             print("*" * line_len)
             self.play_once = View().prompt_to_exit()
 
-        return name, firstname, birthdate, gender, initial_ranking
+        return player_id, player_elo
+
 
 class PlayersView(View):
     def __init__(self):

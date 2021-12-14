@@ -61,6 +61,16 @@ class MenuPlayerController:
             new_player = Player(*player_view.prompt_for_player())
             player_list_db.add_player_to_list(new_player)
             new_player.save_player(new_player)
+        if chosen_option == "30":
+            player_list_db = Players()
+            player_list_db.load_players()
+            players_view = PlayersView()
+            players_view.print_players(player_list_db.get_list_of_players())
+            (player_id, new_ranking) = PlayerView().prompt_for_new_ranking()
+            player_id = int(player_id)
+            new_player = player_list_db.get_player_by_id(int(player_id))
+            new_player.set_ranking(new_ranking)
+            new_player.save_player(new_player, player_id)
         next_menu = self.menu.get_action(chosen_option)
         return next_menu
 
@@ -83,6 +93,7 @@ MENU = {
 MENU_PLAYER = {
     "10": ("Afficher les joueurs en base", MenuPlayerController()),
     "20": ("Ajouter un joueur en base", MenuPlayerController()),
+    "30": ("Mettre à jour ELO ", MenuPlayerController()),
     "80": ("Retour à l'accueil", MenuController()),
     "90": ("Quitter l'application", MenuExitController()),
 }
