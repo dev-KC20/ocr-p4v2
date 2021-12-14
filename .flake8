@@ -1,0 +1,17 @@
+[flake8]
+max-line-length = 119
+exclude=
+    # unworthy time & CPU consomption
+    .gitignore,
+    .git,
+    # no needs to go thru \env\site-packages\
+    env,
+    # no python code files
+    data,
+    README.md,
+    requirements.txt,
+    LICENSE,
+    .pylintrc,
+    .vscode/,
+    # There's no value in checking cache directories
+    __pycache__,
