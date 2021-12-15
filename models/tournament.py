@@ -5,7 +5,7 @@
 import datetime
 from utils.constants import ROUND_DEFAULT, CONTROLS, DB_TABLE_TOURNAMENT
 from utils.database import Database
-from .player import Player
+from .player import Player #, Players
 
 
 class Match:
@@ -100,6 +100,12 @@ class Tournament:
 
     def serialize_tournament(self):
         """provide serialized version of one tournament"""
+
+        serialized_players = []
+        for joueur in self._players:
+            serialized_players.append(joueur.serialize_player())
+
+         
         return {
             "tournament_id": self.__id,
             "tournament_name": self._event_name,
@@ -109,9 +115,10 @@ class Tournament:
             "tournament_closing_date": self._event_closing_date,
             "tournament_round_number": self._round_number,
             "tournament_time_control": self._time_control,
-            "tournament_players": self._players,
+            "tournament_players": serialized_players,
             "tournament_rounds": self._rounds,
         }
+
 
     def save_tournament(self, new_tournament, tournament_id=None):
         """Save one tournament

@@ -138,6 +138,16 @@ class Players:
             )
         print(f" {len(self.__players_known)} joueurs chargés")
 
+    def serialize_players(self):
+        """Serialize list of players"""
+
+        _serialized_players = []
+        for joueur in self.__players_known:
+            # only append data records
+            if joueur.__dict__.get("_name"):
+                _serialized_players.append(joueur.__dict__)
+        return _serialized_players
+
     # def save_players(self):
     #     """Save players
     #     Save uses the fact that a class has a description as dictionnary

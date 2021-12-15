@@ -52,18 +52,22 @@ class MenuPlayerController:
             self.menu.add_menu(key, value)
         chosen_option = MenuView(self.menu).get_user_input()
         if chosen_option == "10":
+            # Afficher les joueurs en base
             player_list_db = Players()
             player_list_db.load_players()
             PlayersView().print_players(player_list_db.get_list_of_players())
 
         if chosen_option == "20":
+            # Ajouter un joueur en base
             player_list_db = Players()
             player_list_db.load_players()
             player_view = PlayerView()
             new_player = Player(*player_view.prompt_for_player())
             player_list_db.add_player_to_list(new_player)
             new_player.save_player(new_player)
+
         if chosen_option == "30":
+            # Mettre à jour ELO 
             player_list_db = Players()
             player_list_db.load_players()
             players_view = PlayersView()
@@ -89,26 +93,34 @@ class MenuTournamentController:
             self.menu.add_menu(key, value)
         chosen_option = MenuView(self.menu).get_user_input()
         if chosen_option == "10":
+            # Afficher les tournois
             tournament_list_db = Tournaments()
             tournament_list_db.load_tournaments()
             tournaments_view = TournamentsView()
             tournaments_view.print_tournaments(tournament_list_db.get_list_of_tournaments())
 
-
         if chosen_option == "20":
+            # Créer un tournoi
             tournament_view = TournamentView()
             new_tournament = Tournament(*tournament_view.prompt_for_tournament())
             new_tournament.save_tournament(new_tournament)
 
-        if chosen_option == "20":
-            pass
-            # tournament_list_db = tournaments()
-            # tournament_list_db.load_tournaments()
-            # tournament_view = tournamentView()
-            # new_tournament = tournament(*tournament_view.prompt_for_tournament())
-            # tournament_list_db.add_tournament_to_list(new_tournament)
-            # new_tournament.save_tournament(new_tournament)
         if chosen_option == "30":
+            # Ouvrir un tournoi == ajouter des joueurs
+            tournament_list_db = Tournaments()
+            tournament_list_db.load_tournaments()
+            new_tournament_view = TournamentView()
+            tournament_id = int(new_tournament_view.select_tournament(tournament_list_db.get_list_of_tournaments()))
+            player_list_db = Players()
+            player_list_db.load_players()
+            new_tournament_view = TournamentView()
+            player_id = int(new_tournament_view.select_player(player_list_db.get_list_of_players()))
+            selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
+            selected_tournament.add_player_to_tournament(player_list_db.get_player_by_id(player_id))
+            # provide tournament_id to update existing tournament
+            selected_tournament.save_tournament(selected_tournament, tournament_id)
+
+        if chosen_option == "40":
             pass
 
         next_menu = self.menu.get_action(chosen_option)

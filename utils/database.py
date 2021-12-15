@@ -6,7 +6,7 @@
 """
 from tinydb import TinyDB, Query
 
-from utils.constants import DB_LOCATION,DB_TABLE_TOURNAMENT,DB_TABLE_PLAYER
+from utils.constants import DB_LOCATION, DB_TABLE_TOURNAMENT, DB_TABLE_PLAYER
 
 
 class Database:
@@ -28,18 +28,20 @@ class Database:
         self.__open_table(table).insert(dict_records)
 
     def set_table(self, table, dict_records, id_doc=None):
+
         if id_doc is None:
             insert_result = self.__open_table(table).insert(dict_records)
             if table == DB_TABLE_PLAYER:
                 self.__open_table(table).update(
-                {"player_id": insert_result}, doc_ids=[insert_result]
+                    {"player_id": insert_result}, doc_ids=[insert_result]
                 )
             if table == DB_TABLE_TOURNAMENT:
                 self.__open_table(table).update(
-                {"tournament_id": insert_result}, doc_ids=[insert_result]
+                    {"tournament_id": insert_result}, doc_ids=[insert_result]
                 )
         else:
             self.__open_table(table).update(dict_records, doc_ids=[id_doc])
+
     def get_table_id(self, table, record_id=None):
         if record_id is not None:
             record = self.__open_table(table).get(table.get_id == record_id)

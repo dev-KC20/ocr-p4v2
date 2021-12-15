@@ -5,6 +5,7 @@
 from typing import List
 import datetime
 from utils.constants import CLEAR_TERMINAL, YESORNO, GENDER, CONTROLS
+
 # use models for typing of classes
 from models.player import Player
 from models.tournament import Tournament
@@ -69,10 +70,10 @@ class View:
                     break
         return prompt_result
 
-    def prompt_to_exit(self):
+    def prompt_to_exit(self, text=None):
 
         exit_reply = View().prompt(
-            "(Y) pour valider",
+            text if text else "(Y + Enter) pour valider",
             "str",
             "Y",
             YESORNO,
@@ -150,7 +151,7 @@ class PlayersView(View):
             for joueur in player_set:
                 if joueur is not None:
                     print(joueur)
-            self.play_once = View().prompt_to_exit()
+            self.play_once = View().prompt_to_exit("(Entrée) pour continuer")
 
 
 class TournamentView(View):
@@ -212,6 +213,45 @@ class TournamentView(View):
             time_control,
         )
 
+    def select_tournament(self, tournament_set: List[Tournament]):
+        """Prompt for id."""
+
+        while not self.play_once:
+            print(CLEAR_TERMINAL)
+            line_len = 50
+            print("*" * line_len)
+            print(" Choisir un tournoi ")
+            print("*" * line_len)
+            print()
+            TournamentsView().print_tournaments(tournament_set)
+
+            tournament_id = View().prompt("entrez l'id du tournoi", "int", 1)
+
+            print()
+            print("*" * line_len)
+            self.play_once = View().prompt_to_exit("Entrer pour valider")
+
+        return tournament_id
+
+    def select_player(self, player_set: List[Player]):
+        """Prompt for id."""
+
+        while not self.play_once:
+            print(CLEAR_TERMINAL)
+            line_len = 50
+            print("*" * line_len)
+            print(" Choisir un joueur ")
+            print("*" * line_len)
+            print()
+            PlayersView().print_players(player_set)
+            player_id = View().prompt("entrez l'id du joueur", "int", 1)
+            print()
+            print("*" * line_len)
+            self.play_once = View().prompt_to_exit("Entrer pour valider")
+
+        return player_id
+
+
 class TournamentsView(View):
     def __init__(self):
         self.play_once = False
@@ -223,4 +263,4 @@ class TournamentsView(View):
             for tournoi in tournament_set:
                 if tournoi is not None:
                     print(tournoi)
-            self.play_once = View().prompt_to_exit()
+            self.play_once = View().prompt_to_exit("(Entrée) pour continuer")
