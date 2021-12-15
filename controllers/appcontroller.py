@@ -96,8 +96,11 @@ class MenuTournamentController:
             # Afficher les tournois
             tournament_list_db = Tournaments()
             tournament_list_db.load_tournaments()
+            # get the player from player_id
+            player_list_db = Players()
+            player_list_db.load_players()
             tournaments_view = TournamentsView()
-            tournaments_view.print_tournaments(tournament_list_db.get_list_of_tournaments())
+            tournaments_view.print_tournaments(tournament_list_db.get_list_of_tournaments(),player_list_db.get_list_of_players())
 
         if chosen_option == "20":
             # Créer un tournoi
@@ -116,7 +119,8 @@ class MenuTournamentController:
             new_tournament_view = TournamentView()
             player_id = int(new_tournament_view.select_player(player_list_db.get_list_of_players()))
             selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
-            selected_tournament.add_player_to_tournament(player_list_db.get_player_by_id(player_id))
+            # save only player's id, not full Player class
+            selected_tournament.add_player_to_tournament(player_id)
             # provide tournament_id to update existing tournament
             selected_tournament.save_tournament(selected_tournament, tournament_id)
 

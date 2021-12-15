@@ -5,7 +5,7 @@
 import datetime
 from utils.constants import ROUND_DEFAULT, CONTROLS, DB_TABLE_TOURNAMENT
 from utils.database import Database
-from .player import Player #, Players
+from .player import Player  # , Players
 
 
 class Match:
@@ -74,20 +74,24 @@ class Tournament:
         return self._formated_tournament
 
     def get_id(self):
-        """player_id getter"""
+        """tournament_id getter"""
         return self.__id
 
     def get_tournament_players(self):
-        """list of participants getter"""
+        """list of participant's id getter"""
         return self._players
 
     def get_tournament_rounds(self):
         """list of rounds getter"""
         return self._rounds
 
-    def add_player_to_tournament(self, new_player: Player):
+    def add_player_to_tournament(self, new_player: int):
         """ask for and register a player to the tournament."""
         self._players.append(new_player)
+
+    def add_players_to_tournament(self, new_player: list):
+        """ask for and register a player to the tournament."""
+        self._players.extend(new_player)
 
     def close_tournament(self):
         """close the tournament"""
@@ -101,11 +105,6 @@ class Tournament:
     def serialize_tournament(self):
         """provide serialized version of one tournament"""
 
-        serialized_players = []
-        for joueur in self._players:
-            serialized_players.append(joueur.serialize_player())
-
-         
         return {
             "tournament_id": self.__id,
             "tournament_name": self._event_name,
@@ -115,10 +114,9 @@ class Tournament:
             "tournament_closing_date": self._event_closing_date,
             "tournament_round_number": self._round_number,
             "tournament_time_control": self._time_control,
-            "tournament_players": serialized_players,
+            "tournament_players": self._players,
             "tournament_rounds": self._rounds,
         }
-
 
     def save_tournament(self, new_tournament, tournament_id=None):
         """Save one tournament
@@ -173,6 +171,11 @@ class Tournaments:
                     tournoi["tournament_round_number"],
                     tournoi["tournament_time_control"],
                     tournoi["tournament_id"],
+                    # tournoi["tournament_rounds"],
                 )
+            )
+            # access to the last appended Tournament & add its players
+            self._tournaments[-1].add_players_to_tournament(
+                tournoi["tournament_players"]
             )
         print(f" {len(self._tournaments)} tournois chargés")

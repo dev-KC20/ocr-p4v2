@@ -144,14 +144,18 @@ class PlayersView(View):
     def __init__(self):
         self.play_once = False
 
-    def print_players(self, player_set: List[Player]):
+    def print_players(self, player_set: List[Player], ask_confirm=True):
         """ """
         while not self.play_once:
             print(" Liste des joueurs de la base")
             for joueur in player_set:
                 if joueur is not None:
                     print(joueur)
-            self.play_once = View().prompt_to_exit("(Entrée) pour continuer")
+            if ask_confirm:
+                self.play_once = View().prompt_to_exit("(Entrée) pour continuer")
+            else:
+                self.play_once = True
+        
 
 
 class TournamentView(View):
@@ -223,7 +227,7 @@ class TournamentView(View):
             print(" Choisir un tournoi ")
             print("*" * line_len)
             print()
-            TournamentsView().print_tournaments(tournament_set)
+            TournamentsView().print_tournaments(tournament_set,ask_confirm=False)
 
             tournament_id = View().prompt("entrez l'id du tournoi", "int", 1)
 
@@ -256,11 +260,21 @@ class TournamentsView(View):
     def __init__(self):
         self.play_once = False
 
-    def print_tournaments(self, tournament_set: List[Tournament]):
+    def print_tournaments(self, tournament_set: List[Tournament], player_set=None, ask_confirm=True):
         """ """
         while not self.play_once:
             print(" Liste des tournois de la base")
             for tournoi in tournament_set:
                 if tournoi is not None:
                     print(tournoi)
-            self.play_once = View().prompt_to_exit("(Entrée) pour continuer")
+                    for joueur in tournoi.get_tournament_players():
+                        print("inscrits:")
+                        # find the player object based on player_id in tournament
+                        if player_set is not None:
+                            for participant in player_set:
+                                if participant.get_id() == joueur:
+                                    print(f' -> {participant}')
+            if ask_confirm:
+                self.play_once = View().prompt_to_exit("(Entrée) pour continuer")
+            else:
+                self.play_once = True
