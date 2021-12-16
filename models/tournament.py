@@ -5,7 +5,7 @@
 import datetime
 from utils.constants import ROUND_DEFAULT, CONTROLS, DB_TABLE_TOURNAMENT
 from utils.database import Database
-from .player import Player  # , Players
+from .player import Player, Players
 
 
 class Match:
@@ -70,6 +70,12 @@ class Tournament:
         self.__id = tournament_id
         self._formated_tournament = f"""id: {self.__id} {self._event_name} à {self._event_location} du {self._event_start_date} au {self._event_closing_date} avec {self._round_number} rondes en mode {self._time_control} """
 
+    def __lt__(self, obj):
+        return (self.__id) < (obj.get_id())
+
+    def __eq__(self, obj):
+        return (self.__id) == (obj.get_id())
+
     def __str__(self):
         return self._formated_tournament
 
@@ -81,16 +87,35 @@ class Tournament:
         """list of participant's id getter"""
         return self._players
 
+    def get_tournament_players_by_rank(self):
+        """list of participant's id sorted by rank getter"""
+        list_players = []
+        # get the full player from player_id
+        player_list_db = Players()
+        player_list_db.load_players()
+        # build a list of Player class from the id's in tournament
+        for player_id in self._players:
+            player_object = player_list_db.get_player_by_id(player_id)
+            # player removed from DB in meantime
+            if player_object is not None:
+                list_players.append(player_object)
+        # sort the list of Player by rank
+        if len(list_players) > 0:
+            list_players.sort(key=lambda x: x.get_ranking(), reverse=True)
+        
+        return list_players
+
     def get_tournament_rounds(self):
         """list of rounds getter"""
         return self._rounds
 
     def add_player_to_tournament(self, new_player: int):
         """ask for and register a player to the tournament."""
-        self._players.append(new_player)
+        if new_player not in self._players:
+            self._players.append(new_player)
 
     def add_players_to_tournament(self, new_player: list):
-        """ask for and register a player to the tournament."""
+        """ask for and register player's ids to the tournament."""
         self._players.extend(new_player)
 
     def close_tournament(self):
@@ -178,4 +203,9 @@ class Tournaments:
             self._tournaments[-1].add_players_to_tournament(
                 tournoi["tournament_players"]
             )
+            # access to the last appended Tournament & add its rounds
+            # self._tournaments[-1].add_players_to_tournament(
+            #     tournoi["tournament_players"]
+            # )
+
         print(f" {len(self._tournaments)} tournois chargés")

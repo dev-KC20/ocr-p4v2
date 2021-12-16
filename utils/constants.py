@@ -9,7 +9,7 @@ import datetime
 
 CLEAR_TERMINAL = " "
 # CLEAR_TERMINAL = chr(27) + "[2J"
-GENDER = ["sans", "M", "F"]
+GENDER = ["No", "M", "F"]
 YESORNO = ["Y", "N"]
 CONTROLS = ["bullet", "blitz", "fast"]
 TEST_FIRSTNAME_SLICE = 2

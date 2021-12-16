@@ -55,7 +55,7 @@ class MenuPlayerController:
             # Afficher les joueurs en base
             player_list_db = Players()
             player_list_db.load_players()
-            PlayersView().print_players(player_list_db.get_list_of_players())
+            PlayersView().print_players(player_list_db.get_players_by_rank())
 
         if chosen_option == "20":
             # Ajouter un joueur en base
@@ -100,7 +100,7 @@ class MenuTournamentController:
             player_list_db = Players()
             player_list_db.load_players()
             tournaments_view = TournamentsView()
-            tournaments_view.print_tournaments(tournament_list_db.get_list_of_tournaments(),player_list_db.get_list_of_players())
+            tournaments_view.print_tournaments(tournament_list_db.get_list_of_tournaments(),player_list_db.get_players_by_rank())
 
         if chosen_option == "20":
             # Créer un tournoi
@@ -157,7 +157,7 @@ MENU_PLAYER = {
 MENU_TOURNAMENT = {
     "10": ("Afficher les tournois", MenuTournamentController()),
     "20": ("Créer un tournoi", MenuTournamentController()),
-    "30": ("Ouvrir un tournoi", MenuTournamentController()),
+    "30": ("Inscrire des joueurs à un tournoi", MenuTournamentController()),
     "40": ("Mettre à jour les résultats", MenuTournamentController()),
     "80": ("Retour à l'accueil", MenuController()),
     "90": ("Quitter l'application", MenuExitController()),

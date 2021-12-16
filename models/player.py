@@ -28,9 +28,37 @@ class Player:
         self.__score = point_earned
         self.__id = player_id
         self.__opponent_met = opponent_met
-        self._formated_player = f"""id: {self.__id}: {self.__firstname} {self.__name},\
-             né {self.__birthdate} {self.__initial_ranking} ELO, score: {self.__score} genre:\
-                  {self.__gender} """
+        # self._formated_player = f"""id: {self.__id}: {self.__firstname.strip()} {self.__name},\
+        #      né {self.__birthdate} {self.__initial_ranking} ELO, score: {self.__score} genre:\
+        #           {self.__gender} """
+        self._formated_player = " ".join(
+            [
+                str(self.__id),
+                self.__gender,
+                self.__firstname,
+                self.__name,
+                "né",
+                str(self.__birthdate),
+                str(self.__initial_ranking),
+                " ELO ",
+            ]
+        )
+
+    # sort by rank
+    def __lt__(self, obj):
+        return (self.__initial_ranking) < (obj)
+        # return (self.__initial_ranking) < (obj.get_ranking())
+
+    def __eq__(self, obj):
+        return (self.__initial_ranking) == (obj)
+        # return (self.__initial_ranking) == (obj.get_ranking())
+
+    # sort by id
+    # def __lt__(self, obj):
+    #     return (self.__id) < (obj.get_id())
+
+    # def __eq__(self, obj):
+    #     return (self.__id) == (obj.get_id())
 
     def get_name(self):
         """name getter"""
@@ -40,9 +68,9 @@ class Player:
         """player_id getter"""
         return self.__id
 
-    def get_ranking(self):
-        """player rank getter"""
-        return self.__initial_ranking
+    def get_score(self):
+        """player score getter"""
+        return self.__score
 
     def set_ranking(self, ranking):
         """The player rank is updated according to match result."""
@@ -55,6 +83,10 @@ class Player:
     def set_opponent_met(self, opponent):
         """The player rank is updated according to match result."""
         self.__opponent_met = opponent
+
+    def get_ranking(self):
+        """player rank getter"""
+        return self.__initial_ranking
 
     def set_score(self, score):
         """The player rank is updated according to match result."""
@@ -109,6 +141,16 @@ class Players:
 
     def get_list_of_players(self):
         """list of all players"""
+        return self.__players_known
+
+    def get_players_by_rank(self):
+        """list of all players sorted by initial_ranking"""
+        self.__players_known.sort(key= lambda x:x.get_ranking(),reverse=True)
+        return self.__players_known
+
+    def get_players_by_score(self):
+        """list of all players sorted by score then ranking"""
+        self.__players_known.sort(key= lambda x:(x.get_score(), x.get_ranking()),reverse=True)
         return self.__players_known
 
     def get_player_by_id(self, player_id):

@@ -148,14 +148,17 @@ class PlayersView(View):
         """ """
         while not self.play_once:
             print(" Liste des joueurs de la base")
+            # move to models & call in controllers
+            # player_set.sort(reverse=False)
             for joueur in player_set:
                 if joueur is not None:
                     print(joueur)
             if ask_confirm:
-                self.play_once = View().prompt_to_exit("(Entrée) pour continuer")
+                self.play_once = View().prompt_to_exit(
+                    "(Entrée) pour continuer"
+                )
             else:
                 self.play_once = True
-        
 
 
 class TournamentView(View):
@@ -227,7 +230,9 @@ class TournamentView(View):
             print(" Choisir un tournoi ")
             print("*" * line_len)
             print()
-            TournamentsView().print_tournaments(tournament_set,ask_confirm=False)
+            TournamentsView().print_tournaments(
+                tournament_set, ask_confirm=False
+            )
 
             tournament_id = View().prompt("entrez l'id du tournoi", "int", 1)
 
@@ -260,21 +265,35 @@ class TournamentsView(View):
     def __init__(self):
         self.play_once = False
 
-    def print_tournaments(self, tournament_set: List[Tournament], player_set=None, ask_confirm=True):
+    def print_tournaments(
+        self,
+        tournament_set: List[Tournament],
+        player_set=None,
+        ask_confirm=True,
+    ):
         """ """
         while not self.play_once:
             print(" Liste des tournois de la base")
+            tournament_set.sort(reverse=False)
             for tournoi in tournament_set:
                 if tournoi is not None:
                     print(tournoi)
-                    for joueur in tournoi.get_tournament_players():
-                        print("inscrits:")
+                    registred_show = True
+                    tournament_player_set = tournoi.get_tournament_players_by_rank()
+                    # tournament_player_set.sort(reverse=True)
+                    for joueur in tournament_player_set:
+                        if registred_show:
+                            print("inscrits:")
+                            registred_show = False
                         # find the player object based on player_id in tournament
                         if player_set is not None:
-                            for participant in player_set:
-                                if participant.get_id() == joueur:
-                                    print(f' -> {participant}')
+                            if joueur in player_set:
+                            # for participant in player_set:
+                            #     if participant == joueur:
+                                print(f" -> {joueur}")
             if ask_confirm:
-                self.play_once = View().prompt_to_exit("(Entrée) pour continuer")
+                self.play_once = View().prompt_to_exit(
+                    "(Entrée) pour continuer"
+                )
             else:
                 self.play_once = True
