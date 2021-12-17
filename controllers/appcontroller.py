@@ -15,6 +15,7 @@ from views.appview import (
     PlayerView,
     TournamentView,
     TournamentsView,
+    RoundView
 )
 
 
@@ -149,7 +150,7 @@ class MenuTournamentController:
             )
 
         if chosen_option == "40":
-            # Ouvrir un tournoi == associer les joueurs
+            # Ouvrir un tournoi == associer les joueurs en match
             tournament_list_db = Tournaments()
             tournament_list_db.load_tournaments()
             new_tournament_view = TournamentView()
@@ -190,6 +191,42 @@ class MenuTournamentController:
                 selected_tournament, selected_tournament.get_id()
             )
 
+        if chosen_option == "45":
+            # Closing a given Round of a givn Tournament
+            tournament_list_db = Tournaments()
+            tournament_list_db.load_tournaments()
+            new_tournament_view = TournamentView()
+            existing_rounds = []
+            while not existing_rounds:
+                tournament_id = int(
+                new_tournament_view.select_tournament(
+                    tournament_list_db.get_list_of_tournaments()
+                )
+            )
+                selected_tournament = tournament_list_db.get_tournament_by_id(
+                tournament_id
+            )
+            # are rounds attached to selected tournament?
+                existing_rounds = selected_tournament.get_tournament_rounds()
+
+            new_round_view = RoundView()
+            # is the selected round existing at all in the tournaments?
+            search_round = True
+            while search_round:
+                round_to_close = new_round_view.prompt_for_round()
+                # check if round exists
+                existing_rounds = selected_tournament.get_tournament_rounds()
+                if existing_rounds != []:
+                    for ronde in existing_rounds:
+                        if ronde[0].get_round_name() == round_to_close:
+                            search_round = False
+                            round_to_close = ronde[0]
+            round_to_close.close_round()
+            # print(round_to_close)
+            selected_tournament.save_tournament(
+                selected_tournament, selected_tournament.get_id()
+            )
+
         if chosen_option == "50":
             pass
 
@@ -225,6 +262,7 @@ MENU_TOURNAMENT = {
     "20": ("Créer un tournoi", MenuTournamentController()),
     "30": ("Inscrire des joueurs à un tournoi", MenuTournamentController()),
     "40": ("Ouvrir un tournoi", MenuTournamentController()),
+    "45": ("Fermer une ronde", MenuTournamentController()),
     "50": ("Mettre à jour les résultats", MenuTournamentController()),
     "80": ("Retour à l'accueil", MenuController()),
     "90": ("Quitter l'application", MenuExitController()),

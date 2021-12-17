@@ -2,7 +2,7 @@
 # coding: utf-8
 """ tournament.
     """
-from datetime import datetime
+from datetime import datetime, date
 from utils.constants import ROUND_DEFAULT, CONTROLS, DB_TABLE_TOURNAMENT
 from utils.database import Database
 from .player import Players  # Player,
@@ -22,8 +22,11 @@ class Match:
         )
 
     def __repr__(self):
-        return (f""" ====>  blanc {self._player1_id}: {self._score_1},noir {self._player2_id}: {self._score_2} """)
-    
+        return (
+            f""" ====>  blanc {self._player1_id}: {self._score_1},"""
+            f"""noir {self._player2_id}: {self._score_2} """
+        )
+
     def set_match_score(self, score_1):
         """score setter."""
         self._score_1 = score_1
@@ -32,6 +35,14 @@ class Match:
     def get_match(self):
         """returns match formatted."""
         return self._formated_match
+
+    def get_match_score1(self):
+        """returns score of player 1."""
+        return self._score_1
+
+    def get_match_score2(self):
+        """returns score of player 2."""
+        return self._score_2
 
     def get_match_player1(self):
         """returns match formatted."""
@@ -75,19 +86,34 @@ class Round:
         self._round_start_time = round_time.strftime("%Hh%Mm%Ss")
         self._round_end_date = round_end_date
         self._round_end_time = round_end_time
-
         self._matchs = [] if not matchs else matchs
+        self._round_status = "Vide"
+
+    def get_round_name(self):
+        """round name getter."""
+        return self._round_name
+
+    def get_round_status(self):
+        """status of one round getter."""
+        if self._round_start_date:
+            self._round_status = "En cours"
+        if self._round_end_date :
+            # at leat one match has a score
+            for jeu in self._matchs:
+                if jeu.get_match_score1() == 0 and  jeu.get_match_score2() == 0:
+                    self._round_status = "Finie"
+                if jeu.get_match_score1() != 0 or  jeu.get_match_score2() != 0:
+                    self._round_status = "Close"
+        return self._round_status
 
     def close_round(self):
         """closing a round."""
-        self._round_end_date = datetime.date.today().strftime("%d/%m/%Y")
-        self._round_end_time = datetime.datetime.now().time().strftime("%Hh%Mm%Ss")
+        self._round_end_date = date.today().strftime("%d/%m/%Y")
+        self._round_end_time = datetime.now().time().strftime("%Hh%Mm%Ss")
 
     def add_match(self, new_match: Match):
         """adding a match to a round."""
-        self._matchs.append(
-            Match(new_match[0], new_match[1])
-        )
+        self._matchs.append(Match(new_match[0], new_match[1]))
 
     def get_matchs(self):
         """match list getter."""
@@ -103,8 +129,10 @@ class Round:
             return date_time_object
 
     def __str__(self):
-        return f" Ronde {self._round_name} débuté\
-             le {self._round_start_date} à {self._round_start_time} "
+        return (
+            f""" {self._round_name} état: {self.get_round_status()} """
+            f""" a débuté {self._round_start_date} à {self._round_start_time} """
+        )
 
     def serialize_round(self):
         """provide serialized version of one round"""
@@ -113,11 +141,8 @@ class Round:
             matchs_serialized.append(match.serialize_match())
         return {
             "round_name": self._round_name,
-            "round_start_date": 
-                self._round_start_date
-            ,
-            "round_start_time": self._round_start_time
-            ,
+            "round_start_date": self._round_start_date,
+            "round_start_time": self._round_start_time,
             "round_end_date": self._round_end_date,
             "round_end_time": self._round_end_time,
             "round_matchs": matchs_serialized,
@@ -175,19 +200,15 @@ class Tournament:
         """max of round  getter"""
         return self._round_number
 
-    # def get_tournament_rounds(self):
-    #     """list of rounds getter"""
-    #     return self._rounds
-
     def get_tournament_rounds(self):
         """list of rounds & matchs getter
-        
+
         output: list of tuples (ronde, list of matchs)
         """
         list_rounds = []
         for ronde in self._rounds:
             # appends a list of the matchs of ronde
-            list_rounds.append((ronde,ronde.get_matchs()))
+            list_rounds.append((ronde, ronde.get_matchs()))
         # also print round date&time
         return list_rounds
 
@@ -273,7 +294,7 @@ class Tournament:
 
     def close_tournament(self):
         """close the tournament"""
-        self._event_closing_date = datetime.date.today()
+        self._event_closing_date = date.today()
 
     def add_round(self, new_round: Round):
         """add a round to the tournament."""
@@ -328,13 +349,44 @@ class Tournament:
         self._rounds.append(
             Round(
                 serialized_rounds["round_name"],
-                datetime.strptime(serialized_rounds["round_start_date"], "%d/%m/%Y"),
-                datetime.strptime(serialized_rounds["round_start_time"], "%Hh%Mm%Ss"),
+                datetime.strptime(
+                    serialized_rounds["round_start_date"], "%d/%m/%Y"
+                ),
+                datetime.strptime(
+                    serialized_rounds["round_start_time"], "%Hh%Mm%Ss"
+                ),
                 serialized_rounds["round_end_date"],
                 serialized_rounds["round_end_time"],
                 list_serialized_matchs,
             )
         )
+
+    def load_tournament(self, tournament_id):
+        """Load one saved tournament into Tournament()"""
+        __serialized_tournament = Database().get_table_id(
+            DB_TABLE_TOURNAMENT, tournament_id
+        )
+
+        tournoi = Tournament(
+            __serialized_tournament["tournament_name"],
+            __serialized_tournament["tournament_description"],
+            __serialized_tournament["tournament_location"],
+            __serialized_tournament["tournament_start_date"],
+            __serialized_tournament["tournament_closing_date"],
+            __serialized_tournament["tournament_round_number"],
+            __serialized_tournament["tournament_time_control"],
+            __serialized_tournament["tournament_id"],
+        )
+
+        # [M] it looks weird here ; isn't there a better pythonic way?
+        # access to the last appended Tournament & add its players
+        tournoi.add_players_to_tournament(
+            __serialized_tournament["tournament_players"]
+        )
+        # access to the last appended Tournament & add its rounds
+        # "tournament_rounds" deserialized added 1by1 to former added class Tournaments
+        for ronde in __serialized_tournament["tournament_rounds"]:
+            tournoi.load_round(ronde)
 
 
 class Tournaments:
@@ -384,4 +436,3 @@ class Tournaments:
             # "tournament_rounds" deserialized added 1by1 to former added class Tournaments
             for ronde in tournoi["tournament_rounds"]:
                 self._tournaments[-1].load_round(ronde)
-                # self._tournaments[-1].add_round(ronde.load_round()

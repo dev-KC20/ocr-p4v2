@@ -167,6 +167,7 @@ class TournamentView(View):
 
     def prompt_for_tournament(self):
         """Prompt for details."""
+        self.play_once = False
         while not self.play_once:
             print(CLEAR_TERMINAL)
             line_len = 50
@@ -222,7 +223,7 @@ class TournamentView(View):
 
     def select_tournament(self, tournament_set: List[Tournament]):
         """Prompt for id."""
-
+        self.play_once = False
         while not self.play_once:
             print(CLEAR_TERMINAL)
             line_len = 50
@@ -244,7 +245,7 @@ class TournamentView(View):
 
     def select_player(self, player_set: List[Player]):
         """Prompt for id."""
-
+        self.play_once = False
         while not self.play_once:
             print(CLEAR_TERMINAL)
             line_len = 50
@@ -278,18 +279,17 @@ class TournamentsView(View):
             for tournoi in tournament_set:
                 if tournoi is not None:
                     print(tournoi)
-                    registred_show = True
                     tournament_player_set = (
                         tournoi.get_tournament_players_by_rank()
                     )
-                    # tournament_player_set.sort(reverse=True)
+                    registred_show = True
                     for joueur in tournament_player_set:
-                        if registred_show:
-                            print("inscrits:")
-                            registred_show = False
                         # find the player object based on player_id in tournament
                         if player_set is not None:
                             if joueur in player_set:
+                                if registred_show:
+                                    print("inscrits:")
+                                    registred_show = False
                                 # for participant in player_set:
                                 #     if participant == joueur:
                                 print(f" -> {joueur}")
@@ -304,3 +304,29 @@ class TournamentsView(View):
                 )
             else:
                 self.play_once = True
+
+
+class RoundView(View):
+    def __init__(self):
+        self.play_once = False
+
+    def prompt_for_round(self):
+        """Prompt for details."""
+        self.play_once = False
+        while not self.play_once:
+            print(CLEAR_TERMINAL)
+            line_len = 50
+            print("*" * line_len)
+            print(" Choisir la ronde à finir ")
+            print("*" * line_len)
+            print()
+
+            round_name = View().prompt(
+                "Fermer la ronde de nom : ", "str", "Ronde1"
+            )
+
+            print()
+            print("*" * line_len)
+            self.play_once = View().prompt_to_exit()
+
+        return round_name
