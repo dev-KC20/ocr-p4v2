@@ -279,7 +279,9 @@ class TournamentsView(View):
                 if tournoi is not None:
                     print(tournoi)
                     registred_show = True
-                    tournament_player_set = tournoi.get_tournament_players_by_rank()
+                    tournament_player_set = (
+                        tournoi.get_tournament_players_by_rank()
+                    )
                     # tournament_player_set.sort(reverse=True)
                     for joueur in tournament_player_set:
                         if registred_show:
@@ -288,9 +290,14 @@ class TournamentsView(View):
                         # find the player object based on player_id in tournament
                         if player_set is not None:
                             if joueur in player_set:
-                            # for participant in player_set:
-                            #     if participant == joueur:
+                                # for participant in player_set:
+                                #     if participant == joueur:
                                 print(f" -> {joueur}")
+                    for ronde, match_list in tournoi.get_tournament_rounds():
+                        print(f" ==> {ronde}")
+                        for jeu in match_list:
+                            print(jeu)
+
             if ask_confirm:
                 self.play_once = View().prompt_to_exit(
                     "(Entrée) pour continuer"

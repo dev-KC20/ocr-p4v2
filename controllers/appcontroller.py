@@ -4,11 +4,18 @@
 
 But also manage a list of known players
 """
+import datetime
+
 from utils.menu import Menu
 from models.player import Players, Player
-from models.tournament import Tournament, Tournaments
+from models.tournament import Tournament, Tournaments, Round
 from views.menuview import MenuView
-from views.appview import PlayersView, PlayerView, TournamentView, TournamentsView
+from views.appview import (
+    PlayersView,
+    PlayerView,
+    TournamentView,
+    TournamentsView,
+)
 
 
 class AppController:
@@ -67,7 +74,7 @@ class MenuPlayerController:
             new_player.save_player(new_player)
 
         if chosen_option == "30":
-            # Mettre à jour ELO 
+            # Mettre à jour ELO
             player_list_db = Players()
             player_list_db.load_players()
             players_view = PlayersView()
@@ -100,31 +107,90 @@ class MenuTournamentController:
             player_list_db = Players()
             player_list_db.load_players()
             tournaments_view = TournamentsView()
-            tournaments_view.print_tournaments(tournament_list_db.get_list_of_tournaments(),player_list_db.get_players_by_rank())
+            tournaments_view.print_tournaments(
+                tournament_list_db.get_list_of_tournaments(),
+                player_list_db.get_players_by_rank(),
+            )
 
         if chosen_option == "20":
             # Créer un tournoi
             tournament_view = TournamentView()
-            new_tournament = Tournament(*tournament_view.prompt_for_tournament())
+            new_tournament = Tournament(
+                *tournament_view.prompt_for_tournament()
+            )
             new_tournament.save_tournament(new_tournament)
 
         if chosen_option == "30":
-            # Ouvrir un tournoi == ajouter des joueurs
+            # Ajouter des joueurs
             tournament_list_db = Tournaments()
             tournament_list_db.load_tournaments()
             new_tournament_view = TournamentView()
-            tournament_id = int(new_tournament_view.select_tournament(tournament_list_db.get_list_of_tournaments()))
+            tournament_id = int(
+                new_tournament_view.select_tournament(
+                    tournament_list_db.get_list_of_tournaments()
+                )
+            )
             player_list_db = Players()
             player_list_db.load_players()
             new_tournament_view = TournamentView()
-            player_id = int(new_tournament_view.select_player(player_list_db.get_list_of_players()))
-            selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
+            player_id = int(
+                new_tournament_view.select_player(
+                    player_list_db.get_list_of_players()
+                )
+            )
+            selected_tournament = tournament_list_db.get_tournament_by_id(
+                tournament_id
+            )
             # save only player's id, not full Player class
             selected_tournament.add_player_to_tournament(player_id)
             # provide tournament_id to update existing tournament
-            selected_tournament.save_tournament(selected_tournament, tournament_id)
+            selected_tournament.save_tournament(
+                selected_tournament, tournament_id
+            )
 
         if chosen_option == "40":
+            # Ouvrir un tournoi == associer les joueurs
+            tournament_list_db = Tournaments()
+            tournament_list_db.load_tournaments()
+            new_tournament_view = TournamentView()
+            tournament_id = int(
+                new_tournament_view.select_tournament(
+                    tournament_list_db.get_list_of_tournaments()
+                )
+            )
+            selected_tournament = tournament_list_db.get_tournament_by_id(
+                tournament_id
+            )
+            # save only player's id, not full Player class
+            (
+                list_matchs,
+                odd_winner_id,
+            ) = selected_tournament.pair_players_first_time()
+
+            num_ronde = 1
+            # for num_ronde in range(selected_tournament.get_tournament_round_number()):
+            round_first = Round(
+                "Ronde" + str(num_ronde),
+                datetime.date.today(),
+                datetime.datetime.now().time(),
+            )
+            # generate matches from initial pairing
+            for i in range(len(list_matchs)):
+                new_match = list_matchs[i]
+                round_first.add_match(new_match)
+            # isolate palyer plays against himself and scores 2 x 0.5=1
+            if odd_winner_id:
+                # will be granted victory later
+                winner_match = (odd_winner_id, odd_winner_id)
+                # winner_match.set_match_score(0.5)
+                round_first.add_match(winner_match)
+            print(round_first)
+            selected_tournament.add_round(round_first)
+            selected_tournament.save_tournament(
+                selected_tournament, selected_tournament.get_id()
+            )
+
+        if chosen_option == "50":
             pass
 
         next_menu = self.menu.get_action(chosen_option)
@@ -158,7 +224,8 @@ MENU_TOURNAMENT = {
     "10": ("Afficher les tournois", MenuTournamentController()),
     "20": ("Créer un tournoi", MenuTournamentController()),
     "30": ("Inscrire des joueurs à un tournoi", MenuTournamentController()),
-    "40": ("Mettre à jour les résultats", MenuTournamentController()),
+    "40": ("Ouvrir un tournoi", MenuTournamentController()),
+    "50": ("Mettre à jour les résultats", MenuTournamentController()),
     "80": ("Retour à l'accueil", MenuController()),
     "90": ("Quitter l'application", MenuExitController()),
 }

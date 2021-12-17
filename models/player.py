@@ -16,8 +16,8 @@ class Player:
         birthdate,
         gender,
         initial_ranking,
-        point_earned=0,
         opponent_met=None,
+        point_earned=0,
         player_id=0,
     ):
         self.__name = name
@@ -27,10 +27,7 @@ class Player:
         self.__initial_ranking = initial_ranking
         self.__score = point_earned
         self.__id = player_id
-        self.__opponent_met = opponent_met
-        # self._formated_player = f"""id: {self.__id}: {self.__firstname.strip()} {self.__name},\
-        #      né {self.__birthdate} {self.__initial_ranking} ELO, score: {self.__score} genre:\
-        #           {self.__gender} """
+        self.__opponent_met = [opponent_met]
         self._formated_player = " ".join(
             [
                 str(self.__id),
@@ -43,6 +40,7 @@ class Player:
                 " ELO ",
             ]
         )
+        
 
     # sort by rank
     def __lt__(self, obj):
@@ -82,7 +80,7 @@ class Player:
 
     def set_opponent_met(self, opponent):
         """The player rank is updated according to match result."""
-        self.__opponent_met = opponent
+        self.__opponent_met.append(opponent)
 
     def get_ranking(self):
         """player rank getter"""
@@ -145,12 +143,14 @@ class Players:
 
     def get_players_by_rank(self):
         """list of all players sorted by initial_ranking"""
-        self.__players_known.sort(key= lambda x:x.get_ranking(),reverse=True)
+        self.__players_known.sort(key=lambda x: x.get_ranking(), reverse=True)
         return self.__players_known
 
     def get_players_by_score(self):
         """list of all players sorted by score then ranking"""
-        self.__players_known.sort(key= lambda x:(x.get_score(), x.get_ranking()),reverse=True)
+        self.__players_known.sort(
+            key=lambda x: (x.get_score(), x.get_ranking()), reverse=True
+        )
         return self.__players_known
 
     def get_player_by_id(self, player_id):
@@ -178,7 +178,7 @@ class Players:
                     joueur["player_id"],
                 )
             )
-        print(f" {len(self.__players_known)} joueurs chargés")
+        # print(f" {len(self.__players_known)} joueurs chargés")
 
     def serialize_players(self):
         """Serialize list of players"""
@@ -189,18 +189,3 @@ class Players:
             if joueur.__dict__.get("_name"):
                 _serialized_players.append(joueur.__dict__)
         return _serialized_players
-
-    # def save_players(self):
-    #     """Save players
-    #     Save uses the fact that a class has a description as dictionnary
-    #     the meta structure record is avoided.
-    #     """
-
-    #     _serialized_players = []
-    #     # _self.players_table.truncate()
-    #     for joueur in self.__players_known:
-    #         # only append data records
-    #         if joueur.__dict__.get("_name"):
-    #             _serialized_players.append(joueur.__dict__)
-    #     Database().set_table_all(DB_TABLE_PLAYER, _serialized_players)
-    #     print(f" {len(_serialized_players)} joueurs sauvés")
