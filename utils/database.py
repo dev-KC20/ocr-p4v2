@@ -10,6 +10,10 @@ from utils.constants import DB_LOCATION, DB_TABLE_TOURNAMENT, DB_TABLE_PLAYER
 
 
 class Database:
+    """ initiate the DB connection based on DB_LOCATION json file.
+
+
+        """
     def __init__(self):
         self.__db = TinyDB(DB_LOCATION, sort_keys=True)
 

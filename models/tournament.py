@@ -14,8 +14,8 @@ class Match:
     def __init__(self, player1_id, player2_id):
         self._player1_id = player1_id
         self._player2_id = player2_id
-        self._score_1 = 0
-        self._score_2 = 0
+        self._score_1 = 0.0
+        self._score_2 = 0.0
         self._formated_match = (
             [self._player1_id, self._score_1],
             [self._player2_id, self._score_2],
@@ -23,14 +23,20 @@ class Match:
 
     def __repr__(self):
         return (
+            f"""([{self._player1_id}, {self._score_1}],"""
+            f"""[{self._player2_id}, {self._score_2}])"""
+        )
+
+    def __str__(self):
+        return (
             f""" ====>  blanc {self._player1_id}: {self._score_1},"""
             f"""noir {self._player2_id}: {self._score_2} """
         )
 
     def set_match_score(self, score_1):
         """score setter."""
-        self._score_1 = score_1
-        self._score_2 = 1 - score_1
+        self._score_1 = float(score_1)
+        self._score_2 = 1.0 - self._score_1
 
     def get_match(self):
         """returns match formatted."""
@@ -46,15 +52,15 @@ class Match:
 
     def get_match_player1(self):
         """returns match formatted."""
-        return [self._player1_id]
+        return self._player1_id
 
     def get_match_player2(self):
         """returns match formatted."""
-        return [self._player2_id]
+        return self._player2_id
 
     def is_match_closed(self):
         """Attach players and scores to the match."""
-        if self._score_1 + self._score_2 == 1:
+        if self._score_1 + self._score_2 == 1.0:
             match_closed = True
         else:
             match_closed = False
@@ -64,8 +70,8 @@ class Match:
         """provide serialized version of one match"""
 
         return (
-            [self._player1_id, self._score_1],
-            [self._player2_id, self._score_2],
+            [str(self._player1_id), str(self._score_1)],
+            [str(self._player2_id), str(self._score_2)],
         )
 
 
@@ -97,12 +103,18 @@ class Round:
         """status of one round getter."""
         if self._round_start_date:
             self._round_status = "En cours"
-        if self._round_end_date :
+        if self._round_end_date:
             # at leat one match has a score
             for jeu in self._matchs:
-                if jeu.get_match_score1() == 0 and  jeu.get_match_score2() == 0:
+                if (
+                    jeu.get_match_score1() == 0.0
+                    and jeu.get_match_score2() == 0.0
+                ):
                     self._round_status = "Finie"
-                if jeu.get_match_score1() != 0 or  jeu.get_match_score2() != 0:
+                if (
+                    jeu.get_match_score1() != 0.0
+                    or jeu.get_match_score2() != 0.0
+                ):
                     self._round_status = "Close"
         return self._round_status
 
@@ -111,9 +123,13 @@ class Round:
         self._round_end_date = date.today().strftime("%d/%m/%Y")
         self._round_end_time = datetime.now().time().strftime("%Hh%Mm%Ss")
 
-    def add_match(self, new_match: Match):
-        """adding a match to a round."""
+    def add_match(self, new_match):
+        """adding a match to a round from a list."""
         self._matchs.append(Match(new_match[0], new_match[1]))
+
+    def remove_matchs(self):
+        """remove the list of match attached to the round."""
+        self._matchs = []
 
     def get_matchs(self):
         """match list getter."""
@@ -343,9 +359,15 @@ class Tournament:
         input: dict of one round
         """
         list_serialized_matchs = []
+        # TODO: registred result to be included
         for i in serialized_rounds["round_matchs"]:
             list_serialized_matchs.append(Match(i[0][0], i[1][0]))
-            # add scores to the serialized match
+            # add scores str -> float to the serialized match
+        # print("list_serialized_matchs", list_serialized_matchs)
+        # print(
+        #     "serialized_rounds['round_matchs']",
+        #     serialized_rounds["round_matchs"],
+        # )
         self._rounds.append(
             Round(
                 serialized_rounds["round_name"],

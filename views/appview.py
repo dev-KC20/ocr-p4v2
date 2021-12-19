@@ -4,7 +4,7 @@
     """
 from typing import List
 import datetime
-from utils.constants import CLEAR_TERMINAL, YESORNO, GENDER, CONTROLS
+from utils.constants import CLEAR_TERMINAL, YESORNO, GENDER, CONTROLS, SCORE
 
 # use models for typing of classes
 from models.player import Player
@@ -43,15 +43,40 @@ class View:
             if default_response is not None and len(prompt_result) == 0:
                 return default_response
             if len(prompt_result) != 0:
+                # check and change the type of reply 
                 if type_response == "int":
+                    if not prompt_result.isdigit():
+                        print(
+                            "Ce chiffre n'est pas valide, \
+                            Merci de recommencer."
+                        )
                     try:
-                        if int(prompt_result) > 0:
-                            break
+                        prompt_result = int(prompt_result)
                     except ValueError:
                         raise Exception(
                             "Ce chiffre n'est pas valide, \
                             Merci de recommencer."
                         ) from ValueError()
+                if type_response == "float":
+                    # if isinstance(type(prompt_result), str):
+                    if not prompt_result.replace(".", "", 1).isdigit():
+                        print(
+                            "Ce chiffre n'est pas valide, \
+                            Merci de recommencer."
+                        )
+                    else:
+                        try:
+                            prompt_result = float(prompt_result)
+                        except ValueError:
+                            raise Exception(
+                                "Ce chiffre n'est pas valide, \
+                                Merci de recommencer."
+                            ) from ValueError()
+                        except:
+                            raise Exception(
+                                "Ce chiffre n'est pas valide, \
+                                Merci de recommencer."
+                        )
                 if type_response == "date":
                     try:
                         j_j, m_m, aaaa = prompt_result.split("/")
@@ -61,12 +86,12 @@ class View:
                             "Cette date n'est pas valide, \
                                 Merci de recommencer."
                         ) from ValueError()
-                    else:
-                        break
+                # at this point the type was successfully checked    
                 if closed_response is not None:
                     if prompt_result in closed_response:
                         break
-                if type_response == "str" and isinstance(prompt_result, str):
+                # no error was raised previously, leave the loop
+                else:
                     break
         return prompt_result
 
@@ -239,7 +264,9 @@ class TournamentView(View):
 
             print()
             print("*" * line_len)
-            self.play_once = View().prompt_to_exit("Entrer pour valider")
+            # not asking confirmation to speed up UI
+            self.play_once = True
+            # self.play_once = View().prompt_to_exit("Entrer pour valider")
 
         return tournament_id
 
@@ -257,7 +284,9 @@ class TournamentView(View):
             player_id = View().prompt("entrez l'id du joueur", "int", 1)
             print()
             print("*" * line_len)
-            self.play_once = View().prompt_to_exit("Entrer pour valider")
+            # not asking confirmation to speed up UI
+            self.play_once = True
+            # self.play_once = View().prompt_to_exit("Entrer pour valider")
 
         return player_id
 
@@ -322,7 +351,7 @@ class RoundView(View):
             print()
 
             round_name = View().prompt(
-                "Fermer la ronde de nom : ", "str", "Ronde1"
+                "Fermer la ronde de nom : ", "str", "Ronde1",
             )
 
             print()
@@ -330,3 +359,38 @@ class RoundView(View):
             self.play_once = View().prompt_to_exit()
 
         return round_name
+
+
+class MatchView(View):
+    def __init__(self):
+        self.play_once = False
+
+    def prompt_for_match_result(self, match_list):
+        """Prompt for details."""
+        self.play_once = False
+        while not self.play_once:
+            print(CLEAR_TERMINAL)
+            line_len = 50
+            print("*" * line_len)
+            print(" Saisir le resultat des matchs ")
+            print("*" * line_len)
+            print()
+            results_player1 = []
+            for jeu in match_list:
+                print(jeu)
+                match_score1 = View().prompt(
+                    "Saisir le resultat du joueur des blancs: "
+                    + str(jeu.get_match_player1())
+                    + " : ",
+                    "float",
+                    SCORE[1],
+                    SCORE,
+                )
+
+                results_player1.append(match_score1)
+
+            print()
+            print("*" * line_len)
+            self.play_once = View().prompt_to_exit()
+
+        return results_player1

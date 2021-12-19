@@ -15,7 +15,8 @@ from views.appview import (
     PlayerView,
     TournamentView,
     TournamentsView,
-    RoundView
+    RoundView,
+    MatchView,
 )
 
 
@@ -192,21 +193,21 @@ class MenuTournamentController:
             )
 
         if chosen_option == "45":
-            # Closing a given Round of a givn Tournament
+            # Closing a given Round of a given Tournament
             tournament_list_db = Tournaments()
             tournament_list_db.load_tournaments()
             new_tournament_view = TournamentView()
             existing_rounds = []
             while not existing_rounds:
                 tournament_id = int(
-                new_tournament_view.select_tournament(
-                    tournament_list_db.get_list_of_tournaments()
+                    new_tournament_view.select_tournament(
+                        tournament_list_db.get_list_of_tournaments()
+                    )
                 )
-            )
                 selected_tournament = tournament_list_db.get_tournament_by_id(
-                tournament_id
-            )
-            # are rounds attached to selected tournament?
+                    tournament_id
+                )
+                # are rounds attached to selected tournament?
                 existing_rounds = selected_tournament.get_tournament_rounds()
 
             new_round_view = RoundView()
@@ -222,13 +223,62 @@ class MenuTournamentController:
                             search_round = False
                             round_to_close = ronde[0]
             round_to_close.close_round()
-            # print(round_to_close)
             selected_tournament.save_tournament(
                 selected_tournament, selected_tournament.get_id()
             )
 
         if chosen_option == "50":
-            pass
+            # given a Round & a Tournament, enter match results
+            # load instances of tournaments to choose from
+            tournament_list_db = Tournaments()
+            tournament_list_db.load_tournaments()
+            new_tournament_view = TournamentView()
+
+            # ask user to select tournament & retrieve it & its rounds
+            existing_rounds = []
+            while not existing_rounds:
+                tournament_id = int(
+                    new_tournament_view.select_tournament(
+                        tournament_list_db.get_list_of_tournaments()
+                    )
+                )
+                selected_tournament = tournament_list_db.get_tournament_by_id(
+                    tournament_id
+                )
+                # get the rounds attached to selected tournament?
+                existing_rounds = selected_tournament.get_tournament_rounds()
+
+            new_round_view = RoundView()
+            # ask user to select a round & check if it exists at all in the tournament
+            search_round = True
+            while search_round:
+                # ask which round to register results in
+                round_to_register_in = new_round_view.prompt_for_round()
+                # check if round exists
+                existing_rounds = selected_tournament.get_tournament_rounds()
+                if existing_rounds != []:
+                    for ronde in existing_rounds:
+                        if ronde[0].get_round_name() == round_to_register_in:
+                            search_round = False
+                            round_to_register_in = ronde[0]
+
+            new_match_view = MatchView()
+            # list of player1 scores for all matches of the round
+            waiting_result_matchs = round_to_register_in.get_matchs()
+            result_player1 = new_match_view.prompt_for_match_result(
+                waiting_result_matchs
+            )
+            # walk the match and apply set_match_score in sequence
+            i = 0
+            for jeu in waiting_result_matchs:
+                jeu.set_match_score(float(result_player1[i]))
+                i += 1
+            # TODO: special odd number of player case   
+            # but if player1 == player2 then he wins    
+
+            selected_tournament.save_tournament(
+                selected_tournament, selected_tournament.get_id()
+            )
 
         next_menu = self.menu.get_action(chosen_option)
         return next_menu
