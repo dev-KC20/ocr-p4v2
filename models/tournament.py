@@ -359,15 +359,14 @@ class Tournament:
         input: dict of one round
         """
         list_serialized_matchs = []
-        # TODO: registred result to be included
         for i in serialized_rounds["round_matchs"]:
-            list_serialized_matchs.append(Match(i[0][0], i[1][0]))
-            # add scores str -> float to the serialized match
-        # print("list_serialized_matchs", list_serialized_matchs)
-        # print(
-        #     "serialized_rounds['round_matchs']",
-        #     serialized_rounds["round_matchs"],
-        # )
+            player1_id = i[0][0]
+            player2_id = i[1][0]
+            score_player1 = i[0][1]
+            new_match = Match(player1_id, player2_id)
+            list_serialized_matchs.append(new_match)
+            new_match.set_match_score(float(score_player1))
+
         self._rounds.append(
             Round(
                 serialized_rounds["round_name"],
