@@ -15,7 +15,10 @@ class Database:
 
         """
     def __init__(self):
-        self.__db = TinyDB(DB_LOCATION, sort_keys=True)
+        try:
+            self.__db = TinyDB(DB_LOCATION, sort_keys=True)
+        except FileNotFoundError:
+            print('Avez-vous bien installé un répertoire data pour y loger le fichier json de la base ?')
 
     def __open_table(self, table):
         __table = self.__db.table(table)
