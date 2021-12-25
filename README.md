@@ -16,7 +16,7 @@ The additionnal code follows "CC BY-SA ".
 ---
 ## Objet.  
   
-Version se voulant orientée objet et suivi le cadriciel MVC d'une application permettant de gérer hors ligne des tournois d'échec selon les régles du tournoi suisse.
+Mettre à disposition une application permettant de gérer hors ligne des tournois d'échec selon les régles du tournoi suisse. 
 
 
 Les fonctionnalités :
@@ -38,9 +38,9 @@ Pour utiliser le script "None",
 il est conseillé sous le prompt bash python (ici cmd Anaconda3 sous Windows 11):  
 
 1. de cloner l'ensemble du répertoire github dans un répertoire local dédié.  
-        ``` git clone https://github.com/dev-KC20/ocr-p4.git  
-2. se déplacer dans le sous répertoire de travail ocr-p4
-        ``` cd ocr-p4  
+        ``` git clone https://github.com/dev-KC20/ocr-p4v2.git  
+2. se déplacer dans le sous répertoire de travail ocr-p4v2
+        ``` cd ocr-p4v2  
 3. de créer un environnement virtuel python, env  
         ``` python -m venv env  
 4. d'activer un environnement virtuel python, env  
@@ -48,10 +48,13 @@ il est conseillé sous le prompt bash python (ici cmd Anaconda3 sous Windows 11)
 5. d'installer les paquets requis pour mémoire,   
         ``` pip install -r requirements.txt  
 6. d'executer le script  
-        ``` None    
+        ``` python main.py
   
-Lorem ipsum ...
+## Développement
 
+Nous avons tenté de suivre les principes de la programmation orientée objet (classs, encapsulation, héritage) et de respecter le cadriciel MVC en séparant le code en 3  finalistés Models pour les données, Views pour l'interaction avec l'utilisateur et Controllers pour la logique "Métier".
+
+C'est la version Python 3.9.7 qui a été utilisée ; l'IDE était Visual Studio Code v1.63.
 
 
 
