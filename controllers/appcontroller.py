@@ -29,13 +29,15 @@ class AppController:
         self.tournament_view = None
 
     def run(self):
-        # manage menus
+        """manage menus"""
         self.controller = MenuController().run()
         while self.controller:
             self.controller = self.controller.run()
 
 
 class MenuController:
+    """ 
+    """
     def __init__(self):
         self.menu = None
 
@@ -192,7 +194,7 @@ class MenuTournamentController:
                 selected_tournament, selected_tournament.get_id()
             )
 
-        if chosen_option == "45":
+        if chosen_option == "50":
             # Closing a given Round of a given Tournament
             tournament_list_db = Tournaments()
             tournament_list_db.load_tournaments()
@@ -227,7 +229,7 @@ class MenuTournamentController:
                 selected_tournament, selected_tournament.get_id()
             )
 
-        if chosen_option == "50":
+        if chosen_option == "60":
             # given a Round & a Tournament, enter match results
             # load instances of tournaments to choose from
             tournament_list_db = Tournaments()
@@ -273,8 +275,8 @@ class MenuTournamentController:
             for jeu in waiting_result_matchs:
                 jeu.set_match_score(float(result_player1[i]))
                 i += 1
-            # TODO: special odd number of player case   
-            # but if player1 == player2 then he wins    
+            # TODO: special odd number of player case
+            # but if player1 == player2 then he wins
 
             selected_tournament.save_tournament(
                 selected_tournament, selected_tournament.get_id()
@@ -312,8 +314,8 @@ MENU_TOURNAMENT = {
     "20": ("Créer un tournoi", MenuTournamentController()),
     "30": ("Inscrire des joueurs à un tournoi", MenuTournamentController()),
     "40": ("Ouvrir un tournoi", MenuTournamentController()),
-    "45": ("Fermer une ronde", MenuTournamentController()),
-    "50": ("Mettre à jour les résultats", MenuTournamentController()),
+    "50": ("Fermer une ronde", MenuTournamentController()),
+    "60": ("Mettre à jour les résultats", MenuTournamentController()),
     "80": ("Retour à l'accueil", MenuController()),
     "90": ("Quitter l'application", MenuExitController()),
 }
