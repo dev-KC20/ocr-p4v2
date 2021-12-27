@@ -14,29 +14,29 @@ class Match:
     def __init__(self, player1_id, player2_id):
         self._player1_id = player1_id
         self._player2_id = player2_id
-        self._score_1 = 0.0
-        self._score_2 = 0.0
+        self._score_player1 = 0.0
+        self._score_player2 = 0.0
         self._formated_match = (
-            [self._player1_id, self._score_1],
-            [self._player2_id, self._score_2],
+            [self._player1_id, self._score_player1],
+            [self._player2_id, self._score_player2],
         )
 
     def __repr__(self):
         return (
-            f"""([{self._player1_id}, {self._score_1}],"""
-            f"""[{self._player2_id}, {self._score_2}])"""
+            f"""([{self._player1_id}, {self._score_player1}],"""
+            f"""[{self._player2_id}, {self._score_player2}])"""
         )
 
     def __str__(self):
         return (
-            f""" ====>  blanc {self._player1_id}: {self._score_1},"""
-            f"""noir {self._player2_id}: {self._score_2} """
+            f""" ====>  blanc {self._player1_id}: {self._score_player1},"""
+            f"""noir {self._player2_id}: {self._score_player2} """
         )
 
-    def set_match_score(self, score_1):
+    def set_match_score(self, score_player1):
         """score setter."""
-        self._score_1 = float(score_1)
-        self._score_2 = 1.0 - self._score_1
+        self._score_player1 = float(score_player1)
+        self._score_player2 = 1.0 - self._score_player1
 
     def get_match(self):
         """returns match formatted."""
@@ -44,11 +44,11 @@ class Match:
 
     def get_match_score1(self):
         """returns score of player 1."""
-        return self._score_1
+        return self._score_player1
 
     def get_match_score2(self):
         """returns score of player 2."""
-        return self._score_2
+        return self._score_player2
 
     def get_match_player1(self):
         """returns match formatted."""
@@ -60,7 +60,7 @@ class Match:
 
     def is_match_closed(self):
         """Attach players and scores to the match."""
-        if self._score_1 + self._score_2 == 1.0:
+        if self._score_player1 + self._score_player2 == 1.0:
             match_closed = True
         else:
             match_closed = False
@@ -70,8 +70,8 @@ class Match:
         """provide serialized version of one match"""
 
         return (
-            [str(self._player1_id), str(self._score_1)],
-            [str(self._player2_id), str(self._score_2)],
+            [str(self._player1_id), str(self._score_player1)],
+            [str(self._player2_id), str(self._score_player2)],
         )
 
 
@@ -163,6 +163,34 @@ class Round:
             "round_end_time": self._round_end_time,
             "round_matchs": matchs_serialized,
         }
+
+    def get_player_score_opponent_round(self, former_round):
+        """Walk the matches of the given round and retrieve sum of score for all players
+
+        input: round to walk thru
+        output: dict of player_id with their summed scores
+                dict of player_id with the met opponents
+
+        """
+        # dict where the keys = player's id, values = accumulated scores
+        players_scores = {}
+        # dict where the keys = player's id, values = list of opponents
+        players_opponents = {}
+        # walk the matches of the given round
+        for jeu in former_round.get_matchs():
+            player1_id = jeu[0][0]
+            player2_id = jeu[1][0]
+            score_player1 = jeu[0][1]
+            score_player2 = jeu[1][1]
+            players_scores[player1_id] += score_player1
+            players_scores[player2_id] += score_player2
+            players_opponents[player1_id].append(player2_id)
+            players_opponents[player2_id].append(player1_id)
+
+    # def get_player_opponent(self, former_round: Round):
+    #     for jeu in former_round.get_matchs:
+    #         pass
+        return (players_scores, players_opponents)
 
 
 class Tournament:
