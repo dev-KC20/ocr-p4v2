@@ -3,7 +3,7 @@
 """ tournament.
     """
 from datetime import datetime, date
-from utils.constants import ROUND_DEFAULT, CONTROLS, DB_TABLE_TOURNAMENT
+from utils.constants import ROUND_DEFAULT, CONTROLS, DB_TABLE_TOURNAMENT, ROUND_STATUS
 from utils.database import Database
 from .player import Players  # Player,
 
@@ -22,10 +22,7 @@ class Match:
         )
 
     def __repr__(self):
-        return (
-            f"""([{self._player1_id}, {self._score_player1}],"""
-            f"""[{self._player2_id}, {self._score_player2}])"""
-        )
+        return f"""([{self._player1_id}, {self._score_player1}],""" f"""[{self._player2_id}, {self._score_player2}])"""
 
     def __str__(self):
         return (
@@ -76,7 +73,10 @@ class Match:
 
 
 class Round:
-    """round is a list of matches"""
+    """round is a list of matches
+
+    Round is added after pairing players
+    """
 
     def __init__(
         self,
@@ -93,29 +93,29 @@ class Round:
         self._round_end_date = round_end_date
         self._round_end_time = round_end_time
         self._matchs = [] if not matchs else matchs
-        self._round_status = "Vide"
+        self._round_status = ROUND_STATUS[0]
 
     def get_round_name(self):
         """round name getter."""
         return self._round_name
 
     def get_round_status(self):
-        """status of one round getter."""
+        """status of one round getter.
+
+        The statuses of a round are 0: encours, 1: finie, 2: close
+
+        """
+        encours = ROUND_STATUS[0]
+        finie = ROUND_STATUS[1]
+        close = ROUND_STATUS[2]
         if self._round_start_date:
-            self._round_status = "En cours"
+            self._round_status = encours
         if self._round_end_date:
-            # at leat one match has a score
+            # at least one match has a score
+            self._round_status = finie
             for jeu in self._matchs:
-                if (
-                    jeu.get_match_score1() == 0.0
-                    and jeu.get_match_score2() == 0.0
-                ):
-                    self._round_status = "Finie"
-                if (
-                    jeu.get_match_score1() != 0.0
-                    or jeu.get_match_score2() != 0.0
-                ):
-                    self._round_status = "Close"
+                if jeu.get_match_score1() + jeu.get_match_score2() == 1.0:
+                    self._round_status = close
         return self._round_status
 
     def close_round(self):
@@ -145,10 +145,19 @@ class Round:
             return date_time_object
 
     def __str__(self):
-        return (
-            f""" {self._round_name} état: {self.get_round_status()} """
-            f""" a débuté {self._round_start_date} à {self._round_start_time} """
-        )
+
+        encours = ROUND_STATUS[0]
+        finie = ROUND_STATUS[1]
+        close = ROUND_STATUS[2]
+        if self.get_round_status() == encours:
+            belle_ronde = f""" {self._round_name} {self.get_round_status()} """\
+                            f""" de {self._round_start_date}, {self._round_start_time} """
+        if self.get_round_status() == finie or self.get_round_status() == close:
+            belle_ronde = f""" {self._round_name} {self.get_round_status()} """\
+                            f""" de {self._round_start_date}, {self._round_start_time} """\
+                            f""" à  {self._round_end_date}, {self._round_end_time} """
+
+        return belle_ronde
 
     def serialize_round(self):
         """provide serialized version of one round"""
@@ -187,9 +196,9 @@ class Round:
             players_opponents[player1_id].append(player2_id)
             players_opponents[player2_id].append(player1_id)
 
-    # def get_player_opponent(self, former_round: Round):
-    #     for jeu in former_round.get_matchs:
-    #         pass
+        # def get_player_opponent(self, former_round: Round):
+        #     for jeu in former_round.get_matchs:
+        #         pass
         return (players_scores, players_opponents)
 
 
@@ -256,6 +265,34 @@ class Tournament:
         # also print round date&time
         return list_rounds
 
+    def get_tournament_to_close_round(self):
+        """current round only started getter
+
+        output: round or none
+
+
+        """
+        for ronde in self._rounds:
+            # appends a list of the matchs of ronde
+            if ronde.get_round_status() == ROUND_STATUS[0]:  # encours
+                return ronde
+            else:
+                return None
+
+    def get_tournament_to_register_round(self):
+        """current round waiting results getter
+
+        output: round or none
+        this round is the one waiting for result to be registred
+
+        """
+        for ronde in self._rounds:
+            # appends a list of the matchs of ronde
+            if ronde.get_round_status == ROUND_STATUS[1]:  # finie
+                return ronde
+            else:
+                return None
+
     def get_tournament_players_by_rank(self):
         """list of participant's id sorted by rank getter"""
         list_players = []
@@ -297,9 +334,7 @@ class Tournament:
         number_participants = len(list_players)
         if number_participants > 0:
             list_players.sort(key=lambda x: x[1], reverse=True)
-            pairing_list_first_half = list_players[
-                : int(number_participants / 2)
-            ]
+            pairing_list_first_half = list_players[: int(number_participants / 2)]
             # participant # is odd
             participants_is_odd = False
             if (number_participants % 2) == 1:
@@ -307,13 +342,9 @@ class Tournament:
                 list_players[number_participants - 1][2] = 1
                 participants_is_odd = True
                 # pairing_list = list_players[number_participants - 1]
-                pairing_list_second_half = list_players[
-                    int(number_participants / 2) : number_participants - 1
-                ]
+                pairing_list_second_half = list_players[int(number_participants / 2): number_participants - 1]
             else:
-                pairing_list_second_half = list_players[
-                    int(number_participants / 2) : number_participants
-                ]
+                pairing_list_second_half = list_players[int(number_participants / 2): number_participants]
             match_list = [
                 (pairing_list_first_half[i][0], pairing_list_second_half[i][0])
                 for i in range(len(pairing_list_first_half))
@@ -322,9 +353,7 @@ class Tournament:
 
         return (
             match_list,
-            list_players[number_participants - 1][0]
-            if participants_is_odd
-            else None,
+            list_players[number_participants - 1][0] if participants_is_odd else None,
         )
 
     def add_player_to_tournament(self, new_player: int):
@@ -371,9 +400,7 @@ class Tournament:
         the meta structure record is avoided.
         """
         if tournament_id is None:
-            Database().set_table(
-                DB_TABLE_TOURNAMENT, new_tournament.serialize_tournament()
-            )
+            Database().set_table(DB_TABLE_TOURNAMENT, new_tournament.serialize_tournament())
         else:
             Database().set_table(
                 DB_TABLE_TOURNAMENT,
@@ -386,24 +413,23 @@ class Tournament:
 
         input: dict of one round
         """
+        # if already finished round
         list_serialized_matchs = []
-        for i in serialized_rounds["round_matchs"]:
-            player1_id = i[0][0]
-            player2_id = i[1][0]
-            score_player1 = i[0][1]
-            new_match = Match(player1_id, player2_id)
-            list_serialized_matchs.append(new_match)
-            new_match.set_match_score(float(score_player1))
+        if serialized_rounds["round_end_date"]:
+            # get the matches & results
+            for i in serialized_rounds["round_matchs"]:
+                player1_id = i[0][0]
+                player2_id = i[1][0]
+                score_player1 = i[0][1]
+                new_match = Match(player1_id, player2_id)
+                list_serialized_matchs.append(new_match)
+                new_match.set_match_score(float(score_player1))
 
         self._rounds.append(
             Round(
                 serialized_rounds["round_name"],
-                datetime.strptime(
-                    serialized_rounds["round_start_date"], "%d/%m/%Y"
-                ),
-                datetime.strptime(
-                    serialized_rounds["round_start_time"], "%Hh%Mm%Ss"
-                ),
+                datetime.strptime(serialized_rounds["round_start_date"], "%d/%m/%Y"),
+                datetime.strptime(serialized_rounds["round_start_time"], "%Hh%Mm%Ss"),
                 serialized_rounds["round_end_date"],
                 serialized_rounds["round_end_time"],
                 list_serialized_matchs,
@@ -412,9 +438,7 @@ class Tournament:
 
     def load_tournament(self, tournament_id):
         """Load one saved tournament into Tournament()"""
-        __serialized_tournament = Database().get_table_id(
-            DB_TABLE_TOURNAMENT, tournament_id
-        )
+        __serialized_tournament = Database().get_table_id(DB_TABLE_TOURNAMENT, tournament_id)
 
         tournoi = Tournament(
             __serialized_tournament["tournament_name"],
@@ -429,9 +453,7 @@ class Tournament:
 
         # [M] it looks weird here ; isn't there a better pythonic way?
         # access to the last appended Tournament & add its players
-        tournoi.add_players_to_tournament(
-            __serialized_tournament["tournament_players"]
-        )
+        tournoi.add_players_to_tournament(__serialized_tournament["tournament_players"])
         # access to the last appended Tournament & add its rounds
         # "tournament_rounds" deserialized added 1by1 to former added class Tournaments
         for ronde in __serialized_tournament["tournament_rounds"]:
@@ -459,9 +481,7 @@ class Tournaments:
     def load_tournaments(self):
         """Load saved tournaments into Tournaments()"""
         __serialized_tournaments = []
-        __serialized_tournaments = Database().get_table_all(
-            DB_TABLE_TOURNAMENT
-        )
+        __serialized_tournaments = Database().get_table_all(DB_TABLE_TOURNAMENT)
         for tournoi in __serialized_tournaments:
             # first append one tournament to self._tournaments
             self._tournaments.append(
@@ -478,9 +498,7 @@ class Tournaments:
             )
             # [M] it looks weird here ; isn't there a better pythonic way?
             # access to the last appended Tournament & add its players
-            self._tournaments[-1].add_players_to_tournament(
-                tournoi["tournament_players"]
-            )
+            self._tournaments[-1].add_players_to_tournament(tournoi["tournament_players"])
             # access to the last appended Tournament & add its rounds
             # "tournament_rounds" deserialized added 1by1 to former added class Tournaments
             for ronde in tournoi["tournament_rounds"]:

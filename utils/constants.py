@@ -20,4 +20,5 @@ DATEFORMATTER = "%d/%m/%Y"
 DB_LOCATION = "./data/dbtest.json"
 DB_TABLE_PLAYER = "players"
 DB_TABLE_TOURNAMENT = "tournaments"
-SCORE = [0.0,0.5,1.0]
+SCORE = [0.0, 0.5, 1.0]
+ROUND_STATUS = {0: "encours", 1: "finie", 2: "close"}

@@ -6,6 +6,7 @@
 *.cfg
 *.data
 data/
+flake8_report/
 
 # local settings
 .vscode/
@@ -51,6 +52,7 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # Unit test / coverage reports
+test/
 htmlcov/
 .tox/
 .nox/

@@ -15,3 +15,4 @@ exclude=
     .vscode/,
     # There's no value in checking cache directories
     __pycache__,
+

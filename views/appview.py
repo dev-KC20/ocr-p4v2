@@ -14,9 +14,7 @@ from models.tournament import Tournament
 
 
 class View:
-    def prompt(
-        self, text, type_response, default_response=None, closed_response=None
-    ):
+    def prompt(self, text, type_response, default_response=None, closed_response=None):
         """Attend une réponse conforme de l'utilisateur à l'input.
         text: le texte d'invite à afficher à l'utilisateur
         type_response: si test de valeur (int)>0 ou (date) attendu
@@ -25,25 +23,19 @@ class View:
         """
         if not isinstance(text, str):
             raise Exception("Merci de vérifier le texte passé à prompt()")
-        if closed_response is not None and not isinstance(
-            closed_response, list
-        ):
+        if closed_response is not None and not isinstance(closed_response, list):
             raise Exception("Merci de vérifier la liste passée à prompt()")
         if isinstance(default_response, str):
             default_response_print = default_response
         else:
             default_response_print = str(default_response)
-        input_text = (
-            text + " (defaut:" + default_response_print + "):"
-            if default_response is not None
-            else " :"
-        )
+        input_text = text + " (defaut:" + default_response_print + "):" if default_response is not None else " :"
         while True:
             prompt_result = input(input_text)
             if default_response is not None and len(prompt_result) == 0:
                 return default_response
             if len(prompt_result) != 0:
-                # check and change the type of reply 
+                # check and change the type of reply
                 if type_response == "int":
                     if not prompt_result.isdigit():
                         print(
@@ -72,11 +64,11 @@ class View:
                                 "Ce chiffre n'est pas valide, \
                                 Merci de recommencer."
                             ) from ValueError()
-                        except:
+                        except RuntimeError:
                             raise Exception(
                                 "Ce chiffre n'est pas valide, \
                                 Merci de recommencer."
-                        )
+                            )
                 if type_response == "date":
                     try:
                         j_j, m_m, aaaa = prompt_result.split("/")
@@ -86,7 +78,7 @@ class View:
                             "Cette date n'est pas valide, \
                                 Merci de recommencer."
                         ) from ValueError()
-                # at this point the type was successfully checked    
+                # at this point the type was successfully checked
                 if closed_response is not None:
                     if prompt_result in closed_response:
                         break
@@ -122,9 +114,7 @@ class PlayerView(View):
             print()
 
             name = View().prompt("tapez le nom du joueur", "str", "Martin")
-            firstname = View().prompt(
-                "tapez le prénom du joueur : ", "str", "Paul"
-            )
+            firstname = View().prompt("tapez le prénom du joueur : ", "str", "Paul")
             birthdate = View().prompt(
                 "sa date de naissance (JJ/MM/AAAA): ",
                 "date",
@@ -136,9 +126,7 @@ class PlayerView(View):
                 GENDER[0],
                 GENDER,
             )
-            initial_ranking = View().prompt(
-                "son classement ELO : ", "int", 800
-            )
+            initial_ranking = View().prompt("son classement ELO : ", "int", 800)
             print()
             print("*" * line_len)
             self.play_once = View().prompt_to_exit()
@@ -155,9 +143,7 @@ class PlayerView(View):
             print("*" * line_len)
             print()
             player_id = View().prompt("entrez l'id du joueur", "int", 1)
-            player_elo = View().prompt(
-                "entrez le nouvel ELO du joueur : ", "int", 0
-            )
+            player_elo = View().prompt("entrez le nouvel ELO du joueur : ", "int", 0)
             print()
             print("*" * line_len)
             self.play_once = View().prompt_to_exit()
@@ -179,9 +165,7 @@ class PlayersView(View):
                 if joueur is not None:
                     print(joueur)
             if ask_confirm:
-                self.play_once = View().prompt_to_exit(
-                    "(Entrée) pour continuer"
-                )
+                self.play_once = View().prompt_to_exit("(Entrée) pour continuer")
             else:
                 self.play_once = True
 
@@ -201,17 +185,13 @@ class TournamentView(View):
             print("*" * line_len)
             print()
 
-            name = View().prompt(
-                "tapez le nom du tournoi : ", "str", "Paris grand tournoi"
-            )
+            name = View().prompt("tapez le nom du tournoi : ", "str", "Paris grand tournoi")
             description = View().prompt(
                 "tapez une description du tournoi : ",
                 "str",
                 "Nous acceuillons nos voisins du 20eme.",
             )
-            location = View().prompt(
-                "le lieu du tournoi : ", "str", "Paris 18e"
-            )
+            location = View().prompt("le lieu du tournoi : ", "str", "Paris 18e")
             start_date = View().prompt(
                 "la date du tournoi (JJ/MM/AAAA): ",
                 "date",
@@ -222,9 +202,7 @@ class TournamentView(View):
                 "date",
                 datetime.date(2021, 12, 29).strftime("%d/%m/%Y"),
             )
-            round_number = View().prompt(
-                "le nombre de ronde (défaut=4): ", "int", 4
-            )
+            round_number = View().prompt("le nombre de ronde (défaut=4): ", "int", 4)
             time_control = View().prompt(
                 "le type de partie : ",
                 "str",
@@ -249,6 +227,10 @@ class TournamentView(View):
     def select_tournament(self, tournament_set: List[Tournament]):
         """Prompt for id."""
         self.play_once = False
+        tournament_id_set = []
+        for tournoi in tournament_set:
+            tournament_id_set.append(tournoi.get_id())
+
         while not self.play_once:
             print(CLEAR_TERMINAL)
             line_len = 50
@@ -256,16 +238,16 @@ class TournamentView(View):
             print(" Choisir un tournoi ")
             print("*" * line_len)
             print()
-            TournamentsView().print_tournaments(
-                tournament_set, ask_confirm=False
-            )
+            TournamentsView().print_tournaments(tournament_set, ask_confirm=False)
 
-            tournament_id = View().prompt("entrez l'id du tournoi", "int", 1)
+            tournament_id = View().prompt("entrez l'id du tournoi", "int", "", tournament_id_set)
 
             print()
             print("*" * line_len)
             # not asking confirmation to speed up UI
-            self.play_once = True
+
+            if tournament_id in tournament_id_set:
+                self.play_once = True
             # self.play_once = View().prompt_to_exit("Entrer pour valider")
 
         return tournament_id
@@ -308,9 +290,7 @@ class TournamentsView(View):
             for tournoi in tournament_set:
                 if tournoi is not None:
                     print(tournoi)
-                    tournament_player_set = (
-                        tournoi.get_tournament_players_by_rank()
-                    )
+                    tournament_player_set = tournoi.get_tournament_players_by_rank()
                     registred_show = True
                     for joueur in tournament_player_set:
                         # find the player object based on player_id in tournament
@@ -328,9 +308,7 @@ class TournamentsView(View):
                             print(jeu)
 
             if ask_confirm:
-                self.play_once = View().prompt_to_exit(
-                    "(Entrée) pour continuer"
-                )
+                self.play_once = View().prompt_to_exit("(Entrée) pour continuer")
             else:
                 self.play_once = True
 
@@ -351,7 +329,9 @@ class RoundView(View):
             print()
 
             round_name = View().prompt(
-                "Fermer la ronde de nom : ", "str", "Ronde1",
+                "Fermer la ronde de nom : ",
+                "str",
+                "Ronde1",
             )
 
             print()
@@ -379,9 +359,7 @@ class MatchView(View):
             for jeu in match_list:
                 print(jeu)
                 match_score1 = View().prompt(
-                    "Saisir le resultat du joueur des blancs: "
-                    + str(jeu.get_match_player1())
-                    + " : ",
+                    "Saisir le resultat du joueur des blancs: " + str(jeu.get_match_player1()) + " : ",
                     "float",
                     SCORE[1],
                     SCORE,
