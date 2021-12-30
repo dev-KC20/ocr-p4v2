@@ -30,10 +30,12 @@ class Match:
             f"""noir {self._player2_id}: {self._score_player2} """
         )
 
-    def set_match_score(self, score_player1):
+    def set_match_score(self, score_player1, score_player2):
         """score setter."""
         self._score_player1 = float(score_player1)
-        self._score_player2 = 1.0 - self._score_player1
+        # initially they are both at 0
+        # self._score_player2 = 1.0 - self._score_player1
+        self._score_player2 = float(score_player2)
 
     def get_match(self):
         """returns match formatted."""
@@ -93,7 +95,8 @@ class Round:
         self._round_end_date = round_end_date
         self._round_end_time = round_end_time
         self._matchs = [] if not matchs else matchs
-        self._round_status = ROUND_STATUS[0]
+        self._round_status = self.get_round_status()
+        # self._round_status = ROUND_STATUS[0]
 
     def get_round_name(self):
         """round name getter."""
@@ -150,12 +153,16 @@ class Round:
         finie = ROUND_STATUS[1]
         close = ROUND_STATUS[2]
         if self.get_round_status() == encours:
-            belle_ronde = f""" {self._round_name} {self.get_round_status()} """\
-                            f""" de {self._round_start_date}, {self._round_start_time} """
+            belle_ronde = (
+                f""" {self._round_name} {self.get_round_status()} """
+                f""" de {self._round_start_date}, {self._round_start_time} """
+            )
         if self.get_round_status() == finie or self.get_round_status() == close:
-            belle_ronde = f""" {self._round_name} {self.get_round_status()} """\
-                            f""" de {self._round_start_date}, {self._round_start_time} """\
-                            f""" à  {self._round_end_date}, {self._round_end_time} """
+            belle_ronde = (
+                f""" {self._round_name} {self.get_round_status()} """
+                f""" de {self._round_start_date}, {self._round_start_time} """
+                f""" à  {self._round_end_date}, {self._round_end_time} """
+            )
 
         return belle_ronde
 
@@ -265,7 +272,7 @@ class Tournament:
         # also print round date&time
         return list_rounds
 
-    def get_tournament_to_close_round(self):
+    def get_tournament_to_finish_round(self):
         """current round only started getter
 
         output: round or none
@@ -279,7 +286,7 @@ class Tournament:
             else:
                 return None
 
-    def get_tournament_to_register_round(self):
+    def get_tournament_to_close_round(self):
         """current round waiting results getter
 
         output: round or none
@@ -288,7 +295,7 @@ class Tournament:
         """
         for ronde in self._rounds:
             # appends a list of the matchs of ronde
-            if ronde.get_round_status == ROUND_STATUS[1]:  # finie
+            if ronde.get_round_status() == ROUND_STATUS[1]:  # finie
                 return ronde
             else:
                 return None
@@ -332,23 +339,23 @@ class Tournament:
                 )
         # sort the list of Player by rank
         number_participants = len(list_players)
-        if number_participants > 0:
+        # need at least two players for tournament
+        if number_participants > 1:
+            # position [1] get_ranking()
             list_players.sort(key=lambda x: x[1], reverse=True)
-            pairing_list_first_half = list_players[: int(number_participants / 2)]
+            players_sorted = [x[0] for x in list_players]
+            pairing_list_first_half = players_sorted[:(number_participants // 2)]
+            pairing_list_second_half = players_sorted[(number_participants // 2): number_participants]
             # participant # is odd
             participants_is_odd = False
             if (number_participants % 2) == 1:
-                print("nombre de joueur impair, le dernier gagne un point")
-                list_players[number_participants - 1][2] = 1
+                # add the odd==last player in the first_half list
                 participants_is_odd = True
                 # pairing_list = list_players[number_participants - 1]
-                pairing_list_second_half = list_players[int(number_participants / 2): number_participants - 1]
-            else:
-                pairing_list_second_half = list_players[int(number_participants / 2): number_participants]
-            match_list = [
-                (pairing_list_first_half[i][0], pairing_list_second_half[i][0])
-                for i in range(len(pairing_list_first_half))
-            ]
+                pairing_list_first_half.append(players_sorted[number_participants])
+
+            match_list = list(zip(pairing_list_first_half, pairing_list_second_half))
+
             print(match_list)
 
         return (
@@ -413,17 +420,18 @@ class Tournament:
 
         input: dict of one round
         """
-        # if already finished round
         list_serialized_matchs = []
-        if serialized_rounds["round_end_date"]:
+        # if already opend round ; get_status is not applicable before serialization
+        if serialized_rounds["round_start_date"]:
             # get the matches & results
             for i in serialized_rounds["round_matchs"]:
                 player1_id = i[0][0]
                 player2_id = i[1][0]
                 score_player1 = i[0][1]
+                score_player2 = i[1][1]
                 new_match = Match(player1_id, player2_id)
+                new_match.set_match_score(float(score_player1), float(score_player2))
                 list_serialized_matchs.append(new_match)
-                new_match.set_match_score(float(score_player1))
 
         self._rounds.append(
             Round(

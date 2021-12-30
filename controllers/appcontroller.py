@@ -163,12 +163,12 @@ class MenuTournamentController:
             tournament_list_wo_rounds = [
                 x for x in tournament_list_db.get_list_of_tournaments() if len(x.get_tournament_rounds()) == 0
             ]
-            tournament_id = int(new_tournament_view.select_tournament(tournament_list_wo_rounds))
+            tournament_id = int(new_tournament_view.prompt_for_tournament_id(tournament_list_wo_rounds))
             # get the players from DB
             player_list_db = self.init_player()
             # prepare the  view for selecting one player
             new_tournament_view = TournamentView()
-            player_id = int(new_tournament_view.select_player(player_list_db.get_list_of_players()))
+            player_id = int(new_tournament_view.prompt_for_player_id(player_list_db.get_list_of_players()))
             # create a tournament object from its tournament id
             selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
             # save only player's id, not full Player class
@@ -188,118 +188,99 @@ class MenuTournamentController:
                 for x in tournament_list_db.get_list_of_tournaments()
                 if len(x.get_tournament_players()) > 1 and len(x.get_tournament_rounds()) == 0
             ]
-            tournament_id = int(new_tournament_view.select_tournament(tournament_list_with_players))
-            selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
-            # save only player's id, not full Player class
-            # do the initial pairing of players
-            (
-                list_matchs,
-                odd_winner_id,
-            ) = selected_tournament.pair_players_first_time()
-            # create the initial round
-            num_ronde = 1
-            round_first = Round(
-                "Ronde" + str(num_ronde),
-                datetime.date.today(),
-                datetime.datetime.now().time(),
-            )
-            # Next generate matches from initial pairing
-            for i in range(len(list_matchs)):
-                new_match = list_matchs[i]
-                round_first.add_match(new_match)
-            # odd player plays against himself and scores 1
-            if odd_winner_id:
-                # will be granted victory later
-                winner_match = (odd_winner_id, odd_winner_id)
-                # create a match against himself for the odd player
-                round_first.add_match(winner_match)
-            # add the round with its matches to the tournament
-            selected_tournament.add_round(round_first)
-            # and save them into DB
-            selected_tournament.save_tournament(selected_tournament, selected_tournament.get_id())
+            tournament_id = new_tournament_view.prompt_for_tournament_id(tournament_list_with_players)
+            if tournament_id is not None:
+                tournament_id = int(tournament_id)
+                selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
+                # save only player's id, not full Player class
+                # do the initial pairing of players
+                (
+                    list_matchs,
+                    odd_winner_id,
+                ) = selected_tournament.pair_players_first_time()
+                # create the initial round
+                num_ronde = 1
+                round_first = Round(
+                    "Ronde" + str(num_ronde),
+                    datetime.date.today(),
+                    datetime.datetime.now().time(),
+                )
+                # Next generate matches from initial pairing
+                # TODO: le nombre de match != nbre de joueur/2
+                for i in range(len(list_matchs)):
+                    new_match = list_matchs[i]
+                    round_first.add_match(new_match)
+                # odd player plays against himself and scores 1
+                if odd_winner_id:
+                    # will be granted victory later
+                    winner_match = (odd_winner_id, odd_winner_id)
+                    # create a match against himself for the odd player
+                    round_first.add_match(winner_match)
+                # add the round with its matches to the tournament
+                selected_tournament.add_round(round_first)
+                # and save them into DB
+                selected_tournament.save_tournament(selected_tournament, selected_tournament.get_id())
 
-        # Closing of a given Round of a given Tournament
+        # Finishing of a given Round of a given Tournament : time's over!
         if chosen_option == "50":
-            # TODO ne fermer une ronde que si matchs
             tournament_list_db = self.init_tournament()
             new_tournament_view = TournamentView()
-            # remove tournaments w/o round to close
+            # remove tournaments w/o round to close == no end time
+            # DEBUG: 50 del matches
             tournament_list_with_round = [
+                x
+                for x in tournament_list_db.get_list_of_tournaments()
+                if x.get_tournament_to_finish_round() is not None
+            ]
+            tournament_id = new_tournament_view.prompt_for_tournament_id(tournament_list_with_round)
+            if tournament_id is not None:
+                tournament_id = int(tournament_id)
+                selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
+                selected_round_to_close = selected_tournament.get_tournament_to_finish_round()
+                selected_round_to_close.close_round()
+                selected_tournament.save_tournament(selected_tournament, selected_tournament.get_id())
+
+        # Register matches results and prepare next round
+        if chosen_option == "60":
+            tournament_list_db = self.init_tournament()
+            new_tournament_view = TournamentView()
+
+            # keep only tournaments that are finished
+            tournament_list_to_register = [
                 x
                 for x in tournament_list_db.get_list_of_tournaments()
                 if x.get_tournament_to_close_round() is not None
             ]
-            # tournament_list_with_round = [
-            #     x
-            #     for x in tournament_list_db.get_list_of_tournaments()
-            #     if len(x.get_tournament_rounds()) > 0 and x.get_tournament_to_close_round() is not None
-            # ]
-            existing_rounds = []
-            while not existing_rounds:
-                tournament_id = int(new_tournament_view.select_tournament(tournament_list_with_round))
+            # ask user to select tournament & retrieve its rounds
+
+            tournament_id = new_tournament_view.prompt_for_tournament_id(tournament_list_to_register)
+            if tournament_id is not None:
+                tournament_id = int(tournament_id)
                 selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
-                # are rounds attached to selected tournament?
-                existing_rounds = selected_tournament.get_tournament_rounds()
-
-            new_round_view = RoundView()
-            # is the selected round existing at all in the tournaments?
-            search_round = True
-            while search_round:
-                round_to_close = new_round_view.prompt_for_round()
-                # check if round exists
-                existing_rounds = selected_tournament.get_tournament_rounds()
-                if existing_rounds != []:
-                    for ronde in existing_rounds:
-                        if ronde[0].get_round_name() == round_to_close:
-                            search_round = False
-                            round_to_close = ronde[0]
-            round_to_close.close_round()
-            selected_tournament.save_tournament(selected_tournament, selected_tournament.get_id())
-
-        if chosen_option == "60":
-            # given a Round & a Tournament, enter match results
-            # load instances of tournaments to choose from
-            tournament_list_db = self.init_tournament()
-            new_tournament_view = TournamentView()
-
-            # ask user to select tournament & retrieve it & its rounds
-            existing_rounds = []
-            while not existing_rounds:
-                tournament_id = int(
-                    new_tournament_view.select_tournament(tournament_list_db.get_list_of_tournaments())
-                )
-                selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
-                # get the rounds attached to selected tournament?
-                existing_rounds = selected_tournament.get_tournament_rounds()
-
-            new_round_view = RoundView()
-            # ask user to select a round & check if it exists at all in the tournament
-            search_round = True
-            while search_round:
-                # ask which round to register results in
-                round_to_register_in = new_round_view.prompt_for_round()
-                # check if round exists
-                existing_rounds = selected_tournament.get_tournament_rounds()
-                if existing_rounds != []:
-                    for ronde in existing_rounds:
-                        if ronde[0].get_round_name() == round_to_register_in:
-                            search_round = False
-                            round_to_register_in = ronde[0]
-
-            new_match_view = MatchView()
-            # list of player1 scores for all matches of the round
-            waiting_result_matchs = round_to_register_in.get_matchs()
-            result_player1 = new_match_view.prompt_for_match_result(waiting_result_matchs)
-            # walk the match and apply set_match_score in sequence
-            i = 0
-            for jeu in waiting_result_matchs:
-                jeu.set_match_score(float(result_player1[i]))
-                i += 1
-            # TODO: special odd number of player case
-            # but if player1 == player2 then he wins
-
-            selected_tournament.save_tournament(selected_tournament, selected_tournament.get_id())
-
+                # get the round attached to selected tournament?
+                round_to_close = selected_tournament.get_tournament_to_close_round()
+                round_name_to_close = [round_to_close.get_round_name()]
+                new_round_view = RoundView()
+                # ask user to select a round to register
+                # normally there should be only one but who knows in the future ;)
+                round_name_to_register_in = new_round_view.prompt_for_round_name(round_name_to_close)
+                # no escape request
+                if round_name_to_register_in is not None:
+                    # get the full Round object
+                    if round_to_close.get_round_name() == round_name_to_register_in:
+                        # prepare the view for entering results
+                        new_match_view = MatchView()
+                        # list of player1 scores for all matches of the round
+                        waiting_result_matchs = round_to_close.get_matchs()
+                        result_player1 = new_match_view.prompt_for_match_result(waiting_result_matchs)
+                        # walk the match and apply set_match_score in sequence
+                        i = 0
+                        for jeu in waiting_result_matchs:
+                            jeu.set_match_score(float(result_player1[i]), 1.0 - float(result_player1[i]))
+                            i += 1
+                        # special odd number of player case :
+                        # he is set as player1 == player2 then he wins
+                        selected_tournament.save_tournament(selected_tournament, selected_tournament.get_id())
         next_menu = self.menu.get_action(chosen_option)
         return next_menu
 
@@ -334,6 +315,7 @@ MENU_TOURNAMENT = {
     "40": ("Ouvrir un tournoi", MenuTournamentController()),
     "50": ("Fermer une ronde", MenuTournamentController()),
     "60": ("Mettre à jour les résultats", MenuTournamentController()),
+    "70": ("Ouvrir ronde suivante", MenuTournamentController()),
     "80": ("Retour à l'accueil", MenuController()),
     "90": ("Quitter l'application", MenuExitController()),
 }

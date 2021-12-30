@@ -7,6 +7,7 @@
 
 import datetime
 
+ESCAPE_KEY = "@"
 CLEAR_TERMINAL = " "
 # CLEAR_TERMINAL = chr(27) + "[2J"
 GENDER = ["No", "M", "F"]

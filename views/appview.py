@@ -4,7 +4,7 @@
     """
 from typing import List
 import datetime
-from utils.constants import CLEAR_TERMINAL, YESORNO, GENDER, CONTROLS, SCORE
+from utils.constants import CLEAR_TERMINAL, YESORNO, GENDER, CONTROLS, SCORE, ESCAPE_KEY
 
 # use models for typing of classes
 from models.player import Player
@@ -20,6 +20,9 @@ class View:
         type_response: si test de valeur (int)>0 ou (date) attendu
         default_response:  si rien n'est saisi, cette valeur sera retournée
         closed_response: la réponse doit être une des valeurs de la liste
+
+        Pour "échapper" la saisie en cours, le caractère unique est "@" pour abandonner
+
         """
         if not isinstance(text, str):
             raise Exception("Merci de vérifier le texte passé à prompt()")
@@ -29,9 +32,15 @@ class View:
             default_response_print = default_response
         else:
             default_response_print = str(default_response)
-        input_text = text + " (defaut:" + default_response_print + "):" if default_response is not None else " :"
+        input_text = (
+            text + " @ pour Esc " + " défaut=" + default_response_print + "):"
+            if default_response is not None
+            else " :"
+        )
         while True:
             prompt_result = input(input_text)
+            if prompt_result == ESCAPE_KEY:
+                return None
             if default_response is not None and len(prompt_result) == 0:
                 return default_response
             if len(prompt_result) != 0:
@@ -45,10 +54,11 @@ class View:
                     try:
                         prompt_result = int(prompt_result)
                     except ValueError:
-                        raise Exception(
+                        print(
                             "Ce chiffre n'est pas valide, \
                             Merci de recommencer."
-                        ) from ValueError()
+                        )
+                        return None
                 if type_response == "float":
                     # if isinstance(type(prompt_result), str):
                     if not prompt_result.replace(".", "", 1).isdigit():
@@ -224,7 +234,7 @@ class TournamentView(View):
             time_control,
         )
 
-    def select_tournament(self, tournament_set: List[Tournament]):
+    def prompt_for_tournament_id(self, tournament_set: List[Tournament]):
         """Prompt for id."""
         self.play_once = False
         tournament_id_set = []
@@ -246,13 +256,16 @@ class TournamentView(View):
             print("*" * line_len)
             # not asking confirmation to speed up UI
 
+            if tournament_id is None:
+                self.play_once = True
+
             if tournament_id in tournament_id_set:
                 self.play_once = True
             # self.play_once = View().prompt_to_exit("Entrer pour valider")
 
         return tournament_id
 
-    def select_player(self, player_set: List[Player]):
+    def prompt_for_player_id(self, player_set: List[Player]):
         """Prompt for id."""
         self.play_once = False
         while not self.play_once:
@@ -317,26 +330,24 @@ class RoundView(View):
     def __init__(self):
         self.play_once = False
 
-    def prompt_for_round(self):
+    def prompt_for_round_name(self, round_list):
         """Prompt for details."""
         self.play_once = False
         while not self.play_once:
             print(CLEAR_TERMINAL)
             line_len = 50
             print("*" * line_len)
-            print(" Choisir la ronde à finir ")
+            print("Choisir la ronde ")
             print("*" * line_len)
             print()
-
-            round_name = View().prompt(
-                "Fermer la ronde de nom : ",
-                "str",
-                "Ronde1",
-            )
-
+            # default to 1st element of the given list
+            round_name = View().prompt("Entrée pour clore la ronde", "str", round_list[0], round_list)
+            if round_name is None:
+                self.play_once = True
             print()
             print("*" * line_len)
-            self.play_once = View().prompt_to_exit()
+            self.play_once = True
+            # self.play_once = View().prompt_to_exit()
 
         return round_name
 
@@ -352,7 +363,7 @@ class MatchView(View):
             print(CLEAR_TERMINAL)
             line_len = 50
             print("*" * line_len)
-            print(" Saisir le resultat des matchs ")
+            print(" Saisir le résultat des matchs ")
             print("*" * line_len)
             print()
             results_player1 = []
