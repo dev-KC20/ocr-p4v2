@@ -5,12 +5,15 @@ exclude=
     .gitignore,
     .git,
     # no needs to go thru \env\site-packages\
-    env,
+    env/,
     # no python code files
-    data,
+    data/,
+    flake8_report/
+    test/
     README.md,
     requirements.txt,
     LICENSE,
+    .flake8
     .pylintrc,
     .vscode/,
     # There's no value in checking cache directories

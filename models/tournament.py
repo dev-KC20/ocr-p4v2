@@ -180,7 +180,7 @@ class Round:
             "round_matchs": matchs_serialized,
         }
 
-    def get_player_score_opponent_round(self, former_round):
+    def get_player_score_opponent_round(self):
         """Walk the matches of the given round and retrieve sum of score for all players
 
         input: round to walk thru
@@ -193,19 +193,30 @@ class Round:
         # dict where the keys = player's id, values = list of opponents
         players_opponents = {}
         # walk the matches of the given round
-        for jeu in former_round.get_matchs():
-            player1_id = jeu[0][0]
-            player2_id = jeu[1][0]
-            score_player1 = jeu[0][1]
-            score_player2 = jeu[1][1]
-            players_scores[player1_id] += score_player1
-            players_scores[player2_id] += score_player2
-            players_opponents[player1_id].append(player2_id)
-            players_opponents[player2_id].append(player1_id)
+        for jeu in self.get_matchs():
+            player1_id = int(jeu.get_match_player1())
+            player2_id = int(jeu.get_match_player2())
+            score_player1 = jeu.get_match_score1()
+            score_player2 = jeu.get_match_score2()
+            if player1_id in players_scores:
+                players_scores[player1_id] = players_scores[player1_id] + score_player1
+            else:
+                players_scores[player1_id] = score_player1
+            if player2_id in players_scores:
+                players_scores[player2_id] = players_scores[player2_id] + score_player2
+            else:
+                players_scores[player2_id] = score_player2
+            if player1_id in players_opponents:
+                players_opponents[player1_id].append(player2_id)
+            else:
+                players_opponents[player1_id] = []
+                players_opponents[player1_id].append(player2_id)
+            if player2_id in players_opponents:
+                players_opponents[player2_id].append(player1_id)
+            else:
+                players_opponents[player2_id] = []
+                players_opponents[player2_id].append(player1_id)
 
-        # def get_player_opponent(self, former_round: Round):
-        #     for jeu in former_round.get_matchs:
-        #         pass
         return (players_scores, players_opponents)
 
 
@@ -279,12 +290,24 @@ class Tournament:
 
 
         """
+        round_found = None
         for ronde in self._rounds:
-            # appends a list of the matchs of ronde
             if ronde.get_round_status() == ROUND_STATUS[0]:  # encours
-                return ronde
-            else:
-                return None
+                round_found = ronde
+        return round_found
+
+    def get_tournament_last_round(self):
+        """last round getter
+
+        output: round or none
+
+
+        """
+        round_found = None
+        for ronde in self._rounds[::-1]:
+            if ronde.get_round_status() == ROUND_STATUS[2]:  # close
+                round_found = ronde
+        return round_found
 
     def get_tournament_to_close_round(self):
         """current round waiting results getter
@@ -293,12 +316,11 @@ class Tournament:
         this round is the one waiting for result to be registred
 
         """
+        round_found = None
         for ronde in self._rounds:
-            # appends a list of the matchs of ronde
             if ronde.get_round_status() == ROUND_STATUS[1]:  # finie
-                return ronde
-            else:
-                return None
+                round_found = ronde
+        return round_found
 
     def get_tournament_players_by_rank(self):
         """list of participant's id sorted by rank getter"""
@@ -344,7 +366,88 @@ class Tournament:
             # position [1] get_ranking()
             list_players.sort(key=lambda x: x[1], reverse=True)
             players_sorted = [x[0] for x in list_players]
-            pairing_list_first_half = players_sorted[:(number_participants // 2)]
+            pairing_list_first_half = players_sorted[: (number_participants // 2)]
+            pairing_list_second_half = players_sorted[(number_participants // 2): number_participants]
+            # participant # is odd
+            participants_is_odd = False
+            if (number_participants % 2) == 1:
+                # add the odd==last player in the first_half list
+                participants_is_odd = True
+                # pairing_list = list_players[number_participants - 1]
+                pairing_list_first_half.append(players_sorted[number_participants])
+
+            match_list = list(zip(pairing_list_first_half, pairing_list_second_half))
+
+            print(match_list)
+
+        return (
+            match_list,
+            list_players[number_participants - 1][0] if participants_is_odd else None,
+        )
+
+    @staticmethod
+    def merge_add_dict(dict1, dict2, type):
+        """add the value of dict2 to the value of dict1 for the key"""
+        for key, value in dict2.items():
+            if key in dict1:
+                if type == 'float':
+                    dict1[key] = dict1[key] + value
+                if type == 'list':
+                    dict1[key].extend(value)
+
+            else:
+                dict1[key] = value
+        return dict1
+
+    def pair_players_next_time(self):
+        """takes the list of player registred sort it by score then ELO and split in two half"""
+        list_players = []
+        # get the full player from player_id
+        player_list_db = Players()
+        player_list_db.load_players()
+        # get all tournaments for former scores & opponents
+        tournament_list_db = Tournaments()
+        tournament_list_db.load_tournaments()
+        all_tournament_list = tournament_list_db.get_list_of_tournaments()
+        # walk the tournaments & retrieve all rounds
+        # all tournaments, all rounds but the current WIP one,
+        former_players_scores = {}
+        former_players_opponents = {}
+        for tournoi in all_tournament_list:
+            rounds_matchs_list = tournoi.get_tournament_rounds()
+            for ronde, match in rounds_matchs_list:
+                dict_score = ronde.get_player_score_opponent_round()[0]
+                dict_opponent = ronde.get_player_score_opponent_round()[1]
+                # player's score is the sum of point from previous matches
+                self.merge_add_dict(former_players_scores, dict_score, 'float')
+                self.merge_add_dict(former_players_opponents, dict_opponent, 'list')
+
+        # build a list of player's attributs from the ones in tournament
+        for player_id in self._players:
+            player_object = player_list_db.get_player_by_id(player_id)
+            # player removed from DB in meantime
+            if player_object is not None:
+                player_score = float(former_players_scores[player_id])
+                player_rank = float(player_object.get_ranking())
+                # mult by million will prioritize score over rank
+                player_combined_rank = (1000000 * player_score) + player_rank
+                list_players.append(
+                    [
+                        player_id,
+                        player_combined_rank,
+                        player_score,
+                        player_rank,
+                        former_players_opponents[player_id]
+                    ]
+                )
+        # sort the list of Player by combined score next rank
+        number_participants = len(list_players)
+        # need at least two players for tournament
+        if number_participants > 1:
+            # position [1] combined_ranking score first
+            list_players.sort(key=lambda x: x[1], reverse=True)
+            players_sorted = [x[0] for x in list_players]
+            pairing_list_first_half = players_sorted[: (number_participants // 2)]
             pairing_list_second_half = players_sorted[(number_participants // 2): number_participants]
             # participant # is odd
             participants_is_odd = False
