@@ -415,6 +415,7 @@ class Tournament:
 
     def pair_players_next_time(self):
         """takes the list of player registred sort it by score then ELO and split in two half"""
+
         list_players = []
         # get the full player from player_id
         player_list_db = Players()
@@ -454,6 +455,7 @@ class Tournament:
                         former_players_opponents[player_id]
                     ]
                 )
+        # TODO: pairing_next take into account the already met opponents
         # sort the list of Player by combined score next rank
         number_participants = len(list_players)
         # need at least two players for tournament

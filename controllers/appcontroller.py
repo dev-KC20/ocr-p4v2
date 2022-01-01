@@ -195,7 +195,7 @@ class MenuTournamentController:
                 # save only player's id, not full Player class
                 # do the initial pairing of players
                 (
-                    list_matchs,
+                    list_paired_match,
                     odd_winner_id,
                 ) = selected_tournament.pair_players_first_time()
                 # create the initial round
@@ -206,9 +206,8 @@ class MenuTournamentController:
                     datetime.datetime.now().time(),
                 )
                 # Next generate matches from initial pairing
-                # TODO: le nombre de match != nbre de joueur/2
-                for i in range(len(list_matchs)):
-                    new_match = list_matchs[i]
+                for i in range(len(list_paired_match)):
+                    new_match = list_paired_match[i]
                     round_first.add_match(new_match)
                 # odd player plays against himself and scores 1
                 if odd_winner_id:
@@ -281,28 +280,32 @@ class MenuTournamentController:
                         # he is set as player1 == player2 then he wins
                         selected_tournament.save_tournament(selected_tournament, selected_tournament.get_id())
 
-        # create the next round & matchs
+        # create the next round & matchs == pairing step 2+
         if chosen_option == "70":
+
             # get the tournaments from DB
             tournament_list_db = self.init_tournament()
             new_tournament_view = TournamentView()
+
             # remove tournaments not having the first round over
             tournament_list_with_players = [
                 x for x in tournament_list_db.get_list_of_tournaments() if len(x.get_tournament_rounds()) > 0
             ]
+
             # prompt the user for what tournament its next round is to be created
             tournament_id = new_tournament_view.prompt_for_tournament_id(tournament_list_with_players)
             if tournament_id is not None:
                 tournament_id = int(tournament_id)
                 selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
-                # TODO: pairing_next
-                # do the next pairing of players
+
+                # TODO: pairing_next take into account the already met opponents
+                # do the next pairing of players == pairing step2
                 (
-                    list_matchs,
+                    list_paired_match,
                     odd_winner_id,
                 ) = selected_tournament.pair_players_next_time()
+
                 # get the previous round name
-                # TODO: is not the one select Ronde2
                 former_round = selected_tournament.get_tournament_last_closed_round()
                 # and its name
                 former_round_name = former_round.get_round_name()
@@ -321,14 +324,16 @@ class MenuTournamentController:
                 else:
                     next_round_number = 2
                 next_round_name = former_round_name[: len(former_round_name) - indice] + str(next_round_number)
+
+                # create the new round
                 next_round = Round(
                     next_round_name,
                     datetime.date.today(),
                     datetime.datetime.now().time(),
                 )
-                # Next generate matches from pairing
-                for i in range(len(list_matchs)):
-                    new_match = list_matchs[i]
+                # Generate matches from pairing
+                for i in range(len(list_paired_match)):
+                    new_match = list_paired_match[i]
                     next_round.add_match(new_match)
                 # odd player plays against himself and scores 1
                 if odd_winner_id:

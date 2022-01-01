@@ -8,8 +8,8 @@
 import datetime
 
 ESCAPE_KEY = "@"
-CLEAR_TERMINAL = " "
-# CLEAR_TERMINAL = chr(27) + "[2J"
+# CLEAR_TERMINAL = " "
+CLEAR_TERMINAL = chr(27) + "[2J"
 GENDER = ["No", "M", "F"]
 YESORNO = ["Y", "N"]
 CONTROLS = ["bullet", "blitz", "fast"]
