@@ -272,6 +272,18 @@ class Tournament:
         return self._round_number
 
     def get_tournament_rounds(self):
+        """list of rounds getter
+
+        output: list of rounds
+        """
+        # list_rounds = []
+        # for ronde in self._rounds:
+        #     # appends a list of the rounds
+        #     list_rounds.append(ronde)
+        # return list_rounds
+        return self._rounds
+
+    def get_tournament_rounds_matchs(self):
         """list of rounds & matchs getter
 
         output: list of tuples (ronde, list of matchs)
@@ -280,7 +292,6 @@ class Tournament:
         for ronde in self._rounds:
             # appends a list of the matchs of ronde
             list_rounds.append((ronde, ronde.get_matchs()))
-        # also print round date&time
         return list_rounds
 
     def get_tournament_to_finish_round(self):
@@ -296,7 +307,7 @@ class Tournament:
                 round_found = ronde
         return round_found
 
-    def get_tournament_last_round(self):
+    def get_tournament_last_closed_round(self):
         """last round getter
 
         output: round or none
@@ -304,9 +315,12 @@ class Tournament:
 
         """
         round_found = None
+        # backward should be the 1rst found
+        # last could be the last loaded in the ordered list or the highest end date
         for ronde in self._rounds[::-1]:
             if ronde.get_round_status() == ROUND_STATUS[2]:  # close
                 round_found = ronde
+                break
         return round_found
 
     def get_tournament_to_close_round(self):
@@ -414,8 +428,8 @@ class Tournament:
         former_players_scores = {}
         former_players_opponents = {}
         for tournoi in all_tournament_list:
-            rounds_matchs_list = tournoi.get_tournament_rounds()
-            for ronde, match in rounds_matchs_list:
+            rounds_list = tournoi.get_tournament_rounds()
+            for ronde in rounds_list:
                 dict_score = ronde.get_player_score_opponent_round()[0]
                 dict_opponent = ronde.get_player_score_opponent_round()[1]
                 # player's score is the sum of point from previous matches

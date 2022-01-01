@@ -288,7 +288,7 @@ class MenuTournamentController:
             new_tournament_view = TournamentView()
             # remove tournaments not having the first round over
             tournament_list_with_players = [
-                x for x in tournament_list_db.get_list_of_tournaments() if len(x.get_tournament_rounds()) == 1
+                x for x in tournament_list_db.get_list_of_tournaments() if len(x.get_tournament_rounds()) > 0
             ]
             # prompt the user for what tournament its next round is to be created
             tournament_id = new_tournament_view.prompt_for_tournament_id(tournament_list_with_players)
@@ -302,7 +302,8 @@ class MenuTournamentController:
                     odd_winner_id,
                 ) = selected_tournament.pair_players_next_time()
                 # get the previous round name
-                former_round = selected_tournament.get_tournament_last_round()
+                # TODO: is not the one select Ronde2
+                former_round = selected_tournament.get_tournament_last_closed_round()
                 # and its name
                 former_round_name = former_round.get_round_name()
                 # and the planned number of rounds

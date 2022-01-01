@@ -315,7 +315,7 @@ class TournamentsView(View):
                                 # for participant in player_set:
                                 #     if participant == joueur:
                                 print(f" -> {joueur}")
-                    for ronde, match_list in tournoi.get_tournament_rounds():
+                    for ronde, match_list in tournoi.get_tournament_rounds_matchs():
                         print(f" ==> {ronde}")
                         for jeu in match_list:
                             print(jeu)
