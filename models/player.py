@@ -53,16 +53,16 @@ class Player:
 
     # sort by id
     # def __lt__(self, obj):
-    #     return (self.__id) < (obj.get_id())
+    #     return (self.__id) < (obj.get_player_id())
 
     # def __eq__(self, obj):
-    #     return (self.__id) == (obj.get_id())
+    #     return (self.__id) == (obj.get_player_id())
 
     def get_name(self):
         """name getter"""
         return self.__name
 
-    def get_id(self):
+    def get_player_id(self):
         """player_id getter"""
         return self.__id
 
@@ -157,7 +157,7 @@ class Players:
         """return one player based on his id"""
         found_player = None
         for player in self.__players_known:
-            if player.get_id() == player_id:
+            if player.get_player_id() == player_id:
                 found_player = player
         return found_player
 
