@@ -243,25 +243,25 @@ class Tournament:
         self._time_control = time_control
         self._rounds = []
         self._players = []
-        self.__id = tournament_id
+        self.__tournament_id = tournament_id
         self._formated_tournament = (
-            f"""id: {self.__id} {self._event_name} à {self._event_location}"""
+            f"""id: {self.__tournament_id} {self._event_name} à {self._event_location}"""
             f""" du {self._event_start_date} au {self._event_closing_date} """
             f""" avec {self._round_number} rondes en mode {self._time_control} """
         )
 
-    def __lt__(self, obj):
-        return (self.__id) < (obj.get_id())
-
-    def __eq__(self, obj):
-        return (self.__id) == (obj.get_id())
-
     def __str__(self):
         return self._formated_tournament
 
-    def get_id(self):
+    def get_tournament_id(self):
         """tournament_id getter"""
-        return self.__id
+        return self.__tournament_id
+
+    def __lt__(self, obj):
+        return (self.__tournament_id) < (obj.get_tournament_id())
+
+    def __eq__(self, obj):
+        return (self.__tournament_id) == (obj.get_tournament_id())
 
     def get_tournament_players(self):
         """list of participant's id getter"""
@@ -368,9 +368,8 @@ class Tournament:
                 list_players.append(
                     [
                         player_id,
-                        player_object.get_ranking(),
-                        player_object.get_score(),
-                        player_object.get_opponent_met,
+                        player_object.get_ranking()
+
                     ]
                 )
         # sort the list of Player by rank
@@ -404,9 +403,11 @@ class Tournament:
         """add the value of dict2 to the value of dict1 for the key"""
         for key, value in dict2.items():
             if key in dict1:
-                if type == 'float':
-                    dict1[key] = dict1[key] + value
-                if type == 'list':
+                if type == "float":
+                    dict1[key] += value
+                    # dict1[key] = dict1[key] + value
+                if type == "list":
+                    # TODO: il serait judicieux de vérifier si un opposant n'existe pas déja avant de l'ajouter
                     dict1[key].extend(value)
 
             else:
@@ -432,10 +433,15 @@ class Tournament:
             rounds_list = tournoi.get_tournament_rounds()
             for ronde in rounds_list:
                 dict_score = ronde.get_player_score_opponent_round()[0]
-                dict_opponent = ronde.get_player_score_opponent_round()[1]
+                dict_opponent = {}
+                # opponent should only be in regards of the current tournament
+                # TODO:
+                if tournoi.get_tournament_id() == self.get_tournament_id():
+                    dict_opponent = ronde.get_player_score_opponent_round()[1]
                 # player's score is the sum of point from previous matches
-                self.merge_add_dict(former_players_scores, dict_score, 'float')
-                self.merge_add_dict(former_players_opponents, dict_opponent, 'list')
+                self.merge_add_dict(former_players_scores, dict_score, "float")
+                # TODO: opponent list: should remove the player himself and remove duplicate
+                self.merge_add_dict(former_players_opponents, dict_opponent, "list")
 
         # build a list of player's attributs from the ones in tournament
         for player_id in self._players:
@@ -445,17 +451,12 @@ class Tournament:
                 player_score = float(former_players_scores[player_id])
                 player_rank = float(player_object.get_ranking())
                 # mult by million will prioritize score over rank
-                player_combined_rank = (1000000 * player_score) + player_rank
+                player_combined_rank = (10 ** 6 * player_score) + player_rank
+                # player_combined_rank = (1000000 * player_score) + player_rank
                 list_players.append(
-                    [
-                        player_id,
-                        player_combined_rank,
-                        player_score,
-                        player_rank,
-                        former_players_opponents[player_id]
-                    ]
+                    [player_id, player_combined_rank, player_score, player_rank, former_players_opponents[player_id]]
                 )
-        # TODO: pairing_next take into account the already met opponents
+        # TODO: pairing with duplicates on odd players 7 & 12 2 times
         # sort the list of Player by combined score next rank
         number_participants = len(list_players)
         # need at least two players for tournament
@@ -465,13 +466,27 @@ class Tournament:
             players_sorted = [x[0] for x in list_players]
             pairing_list_first_half = players_sorted[: (number_participants // 2)]
             pairing_list_second_half = players_sorted[(number_participants // 2): number_participants]
+            for idx, blanc in enumerate(pairing_list_first_half):
+                for idx2, noir in enumerate(pairing_list_second_half, idx):
+                    # move to next competitor if blanc & noir were already opponents
+                    if noir not in former_players_opponents[blanc]:
+                        # if not, switch places & leave the loop
+                        (pairing_list_second_half[idx2], pairing_list_second_half[idx]) = (
+                            pairing_list_second_half[idx],
+                            pairing_list_second_half[idx2],
+                        )
+                        break
+                    # if no solution found, keep them like they are
+                    # TODO: aren't there better solutions?
+
             # participant # is odd
             participants_is_odd = False
             if (number_participants % 2) == 1:
                 # add the odd==last player in the first_half list
+                # so he will play against himself and win
                 participants_is_odd = True
                 # pairing_list = list_players[number_participants - 1]
-                pairing_list_first_half.append(players_sorted[number_participants])
+                pairing_list_first_half.append(pairing_list_second_half[-1])
 
             match_list = list(zip(pairing_list_first_half, pairing_list_second_half))
 
@@ -507,7 +522,7 @@ class Tournament:
             rounds_serialized.append(ronde.serialize_round())
 
         return {
-            "tournament_id": self.__id,
+            "tournament_id": self.__tournament_id,
             "tournament_name": self._event_name,
             "tournament_description": self._event_description,
             "tournament_location": self._event_location,
@@ -601,7 +616,7 @@ class Tournaments:
         """return one tournament based on its id"""
         found_tournament = None
         for tournament in self._tournaments:
-            if tournament.get_id() == tournament_id:
+            if tournament.get_tournament_id() == tournament_id:
                 found_tournament = tournament
         return found_tournament
 

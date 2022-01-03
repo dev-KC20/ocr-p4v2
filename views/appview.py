@@ -239,7 +239,7 @@ class TournamentView(View):
         self.play_once = False
         tournament_id_set = []
         for tournoi in tournament_set:
-            tournament_id_set.append(tournoi.get_id())
+            tournament_id_set.append(tournoi.get_tournament_id())
 
         while not self.play_once:
             print(CLEAR_TERMINAL)

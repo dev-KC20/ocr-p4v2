@@ -159,7 +159,7 @@ class MenuTournamentController:
             tournament_list_db = self.init_tournament()
             # prepare the  view for selecting one tournament
             new_tournament_view = TournamentView()
-            # remove tournament having already round set as no player should be added
+            # remove tournament having already rounds set as no more player should be added
             tournament_list_wo_rounds = [
                 x for x in tournament_list_db.get_list_of_tournaments() if len(x.get_tournament_rounds()) == 0
             ]
@@ -218,7 +218,7 @@ class MenuTournamentController:
                 # add the round with its matches to the tournament
                 selected_tournament.add_round(round_first)
                 # and save them into DB
-                selected_tournament.save_tournament(selected_tournament, selected_tournament.get_id())
+                selected_tournament.save_tournament(selected_tournament, selected_tournament.get_tournament_id())
 
         # Finishing of a given Round of a given Tournament : time's over!
         if chosen_option == "50":
@@ -236,7 +236,7 @@ class MenuTournamentController:
                 selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
                 selected_round_to_close = selected_tournament.get_tournament_to_finish_round()
                 selected_round_to_close.close_round()
-                selected_tournament.save_tournament(selected_tournament, selected_tournament.get_id())
+                selected_tournament.save_tournament(selected_tournament, selected_tournament.get_tournament_id())
 
         # Register matches results
         if chosen_option == "60":
@@ -278,20 +278,30 @@ class MenuTournamentController:
                             i += 1
                         # special odd number of player case :
                         # he is set as player1 == player2 then he wins
-                        selected_tournament.save_tournament(selected_tournament, selected_tournament.get_id())
+                        selected_tournament.save_tournament(
+                            selected_tournament, selected_tournament.get_tournament_id()
+                        )
 
         # create the next round & matchs == pairing step 2+
         if chosen_option == "70":
 
             # get the tournaments from DB
+            # [M] possibilité de transformer ces 2 lignes en méthodes
             tournament_list_db = self.init_tournament()
             new_tournament_view = TournamentView()
 
             # remove tournaments not having the first round over
+            # & their # of rounds not yet reached
+            # & the previous round not closed
             tournament_list_with_players = [
-                x for x in tournament_list_db.get_list_of_tournaments() if len(x.get_tournament_rounds()) > 0
+                x
+                for x in tournament_list_db.get_list_of_tournaments()
+                if len(x.get_tournament_rounds()) > 0
+                and len(x.get_tournament_rounds()) < x.get_tournament_round_number()
+                and x.get_tournament_last_closed_round() is not None
             ]
 
+            # TODO: when & how to inform the user when the # of rounds was reached : at result registration?
             # prompt the user for what tournament its next round is to be created
             tournament_id = new_tournament_view.prompt_for_tournament_id(tournament_list_with_players)
             if tournament_id is not None:
@@ -344,7 +354,7 @@ class MenuTournamentController:
                 # add the round with its matches to the tournament
                 selected_tournament.add_round(next_round)
                 # and save them into DB
-                selected_tournament.save_tournament(selected_tournament, selected_tournament.get_id())
+                selected_tournament.save_tournament(selected_tournament, selected_tournament.get_tournament_id())
 
         next_menu = self.menu.get_action(chosen_option)
         return next_menu

@@ -51,7 +51,7 @@ class Database:
 
     def get_table_id(self, table, record_id=None):
         if record_id is not None:
-            record = self.__open_table(table).get(table.get_id == record_id)
+            record = self.__open_table(table).get(table.get_tournament_id == record_id)
         return record
 
     def search_table_single(self, table, attribut, value):

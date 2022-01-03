@@ -16,47 +16,54 @@ class Player:
         birthdate,
         gender,
         initial_ranking,
-        opponent_met=None,
-        point_earned=0,
-        player_id=0,
+        # opponent_met=None,
+        # point_earned=0,
+        player_id=0
     ):
         self.__name = name
         self.__firstname = firstname
         self.__birthdate = birthdate
         self.__gender = gender
         self.__initial_ranking = initial_ranking
-        self.__score = point_earned
-        self.__id = player_id
-        self.__opponent_met = [opponent_met]
+        # self.__score = point_earned
+        self.__player_id = player_id
+        # self.__opponent_met = [opponent_met]
         self._formated_player = " ".join(
             [
-                str(self.__id),
+                str(self.__player_id),
                 self.__gender,
                 self.__firstname,
                 self.__name,
-                "né",
-                str(self.__birthdate),
+                # "né",
+                # str(self.__birthdate),
                 str(self.__initial_ranking),
                 " ELO ",
             ]
         )
-        
 
     # sort by rank
     def __lt__(self, obj):
+        """ less than to enable sorting btw players
+
+        input: obj is one player's id of type integer
+        """
         return (self.__initial_ranking) < (obj)
         # return (self.__initial_ranking) < (obj.get_ranking())
 
     def __eq__(self, obj):
+        """ equal to enable sorting btw players
+
+        input: obj is one player's id of type integer
+        """
         return (self.__initial_ranking) == (obj)
         # return (self.__initial_ranking) == (obj.get_ranking())
 
     # sort by id
     # def __lt__(self, obj):
-    #     return (self.__id) < (obj.get_player_id())
+    #     return (self.__player_id) < (obj.get_player_id())
 
     # def __eq__(self, obj):
-    #     return (self.__id) == (obj.get_player_id())
+    #     return (self.__player_id) == (obj.get_player_id())
 
     def get_name(self):
         """name getter"""
@@ -64,7 +71,7 @@ class Player:
 
     def get_player_id(self):
         """player_id getter"""
-        return self.__id
+        return self.__player_id
 
     def get_score(self):
         """player score getter"""
@@ -74,13 +81,13 @@ class Player:
         """The player rank is updated according to match result."""
         self.__initial_ranking = ranking
 
-    def get_opponent_met(self):
-        """list of opponent the player already met getter"""
-        return self.__opponent_met
+    # def get_opponent_met(self):
+    #     """list of opponent the player already met getter"""
+    #     return self.__opponent_met
 
-    def set_opponent_met(self, opponent):
-        """The player rank is updated according to match result."""
-        self.__opponent_met.append(opponent)
+    # def set_opponent_met(self, opponent):
+    #     """The player rank is updated according to match result."""
+    #     self.__opponent_met.append(opponent)
 
     def get_ranking(self):
         """player rank getter"""
@@ -102,9 +109,9 @@ class Player:
             "birthdate": self.__birthdate,
             "gender": self.__gender,
             "initial_ranking": self.__initial_ranking,
-            "score": self.__score,
-            "opponent_met": self.__opponent_met,
-            "player_id": self.__id,
+            # "score": self.__score,
+            # "opponent_met": self.__opponent_met,
+            "player_id": self.__player_id,
         }
 
     def save_player(self, new_player, player_id=None):
@@ -173,9 +180,9 @@ class Players:
                     joueur["birthdate"],
                     joueur["gender"],
                     joueur["initial_ranking"],
-                    joueur["score"],
-                    joueur["opponent_met"],
-                    joueur["player_id"],
+                    # joueur["score"],
+                    # joueur["opponent_met"],
+                    joueur["player_id"]
                 )
             )
         # print(f" {len(self.__players_known)} joueurs chargés")
