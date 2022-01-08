@@ -365,13 +365,7 @@ class Tournament:
             player_object = player_list_db.get_player_by_id(player_id)
             # player removed from DB in meantime
             if player_object is not None:
-                list_players.append(
-                    [
-                        player_id,
-                        player_object.get_ranking()
-
-                    ]
-                )
+                list_players.append([player_id, player_object.get_ranking()])
         # sort the list of Player by rank
         number_participants = len(list_players)
         # need at least two players for tournament
@@ -456,7 +450,6 @@ class Tournament:
                 list_players.append(
                     [player_id, player_combined_rank, player_score, player_rank, former_players_opponents[player_id]]
                 )
-        # TODO: pairing with duplicates on odd players 7 & 12 2 times
         # sort the list of Player by combined score next rank
         number_participants = len(list_players)
         # need at least two players for tournament
@@ -464,20 +457,25 @@ class Tournament:
             # position [1] combined_ranking score first
             list_players.sort(key=lambda x: x[1], reverse=True)
             players_sorted = [x[0] for x in list_players]
-            pairing_list_first_half = players_sorted[: (number_participants // 2)]
-            pairing_list_second_half = players_sorted[(number_participants // 2): number_participants]
-            for idx, blanc in enumerate(pairing_list_first_half):
-                for idx2, noir in enumerate(pairing_list_second_half, idx):
-                    # move to next competitor if blanc & noir were already opponents
-                    if noir not in former_players_opponents[blanc]:
-                        # if not, switch places & leave the loop
-                        (pairing_list_second_half[idx2], pairing_list_second_half[idx]) = (
-                            pairing_list_second_half[idx],
-                            pairing_list_second_half[idx2],
-                        )
-                        break
-                    # if no solution found, keep them like they are
-                    # TODO: aren't there better solutions?
+            noir = None
+            for idx in range(len(players_sorted)):
+                blanc = players_sorted[idx]
+                if blanc != noir:
+                    idx_opponent = idx + 1  # as per the score ranking
+                    black_players = players_sorted[idx_opponent:]
+                    for idx2, noir in enumerate(black_players):
+                        # leave when no more players
+                        if idx2 == len(black_players) - 1:
+                            break
+
+                        # move to next competitor if blanc & noir were already opponents
+                        if noir not in former_players_opponents[blanc]:
+                            # if not, switch places & leave the loop
+                            (players_sorted[idx_opponent], players_sorted[idx_opponent + idx2]) = (
+                                players_sorted[idx_opponent + idx2],
+                                players_sorted[idx_opponent],
+                            )
+                            break
 
             # participant # is odd
             participants_is_odd = False
@@ -486,14 +484,16 @@ class Tournament:
                 # so he will play against himself and win
                 participants_is_odd = True
                 # pairing_list = list_players[number_participants - 1]
-                pairing_list_first_half.append(pairing_list_second_half[-1])
+                players_sorted.append(players_sorted[-1])
 
-            match_list = list(zip(pairing_list_first_half, pairing_list_second_half))
+            new_match = []
+            for i in range(0, len(players_sorted), 2):
+                new_match.append((players_sorted[i], players_sorted[i + 1]))
 
-            print(match_list)
+            print(new_match)
 
         return (
-            match_list,
+            new_match,
             list_players[number_participants - 1][0] if participants_is_odd else None,
         )
 
