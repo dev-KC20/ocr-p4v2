@@ -383,3 +383,23 @@ class MatchView(View):
             self.play_once = View().prompt_to_exit()
 
         return results_player1
+
+        
+class PlayersReportView(View):
+    def __init__(self):
+        self.play_once = False
+
+    def print_players(self, player_set: List[Player], ask_confirm=True):
+        """ """
+        while not self.play_once:
+            print(" Liste des joueurs de la base")
+            # move to models & call in controllers
+            # player_set.sort(reverse=False)
+            for joueur in player_set:
+                if joueur is not None:
+                    print(joueur)
+            if ask_confirm:
+                self.play_once = View().prompt_to_exit("(Entrée) pour continuer")
+            else:
+                self.play_once = True
+

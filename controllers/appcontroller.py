@@ -22,6 +22,7 @@ from views.appview import (
     TournamentsView,
     RoundView,
     MatchView,
+    PlayersReportView,
 )
 
 
@@ -360,6 +361,58 @@ class MenuTournamentController:
         return next_menu
 
 
+class MenuReportController:
+    def __init__(self):
+        self.menu = None
+
+    def init_player(self):
+        player_list = Players()
+        player_list.load_players()
+        return player_list
+
+    def init_tournament(self):
+        tournament_list = Tournaments()
+        tournament_list.load_tournaments()
+
+        return tournament_list
+
+    def run(self):
+        """ """
+        self.menu = Menu("Gérer les rapports")
+
+        for key, value in MENU_REPORT.items():
+            self.menu.add_menu(key, value)
+        chosen_option = MenuView(self.menu).get_user_input()
+
+        # Show the players - by name sort 
+        if chosen_option == "10":
+            # # get the tournaments from DB
+            # tournament_list_db = self.init_tournament()
+            # get the players from DB
+            player_list_db = self.init_player()
+            # prepare the  view of the list of tournaments
+            report_view = PlayersReportView()
+            # show the tournaments and their players
+            report_view.print_players(
+                                player_list_db.get_players_by_name(),
+            )
+        # Show the players - by ranking 
+        if chosen_option == "20":
+            # # get the tournaments from DB
+            # tournament_list_db = self.init_tournament()
+            # get the players from DB
+            player_list_db = self.init_player()
+            # prepare the  view of the list of tournaments
+            report_view = PlayersReportView()
+            # show the tournaments and their players
+            report_view.print_players(
+                                player_list_db.get_players_by_rank(),
+            )
+
+        next_menu = self.menu.get_action(chosen_option)
+        return next_menu
+
+
 class MenuExitController:
     def __init__(self):
         self.menu = None
@@ -373,6 +426,7 @@ class MenuExitController:
 MENU_HOME = {
     "10": ("Gérer les joueurs", MenuPlayerController()),
     "20": ("Gérer les tournois", MenuTournamentController()),
+    "30": ("Gérer les rapports", MenuReportController()),
     "90": ("Quitter l'application", MenuExitController()),
 }
 
@@ -391,6 +445,18 @@ MENU_TOURNAMENT = {
     "50": ("Fermer une ronde", MenuTournamentController()),
     "60": ("Mettre à jour les résultats", MenuTournamentController()),
     "70": ("Ouvrir ronde suivante", MenuTournamentController()),
+    "80": ("Retour à l'accueil", MenuController()),
+    "90": ("Quitter l'application", MenuExitController()),
+}
+
+MENU_REPORT = {
+    "10": ("Afficher les joueurs - ordre alphabétique", MenuReportController()),
+    "20": ("Afficher les joueurs - classement ", MenuReportController()),
+    "30": ("Afficher les joueurs d'un tournoi - ordre alphabétique", MenuReportController()),
+    "40": ("Afficher les joueurs d'un tournoi - classement ", MenuReportController()),
+    "50": ("Afficher les tournois ", MenuReportController()),
+    "60": ("Afficher les rondes d'un tournoi ", MenuReportController()),
+    "70": ("Afficher les matchs d'un tournoi ", MenuReportController()),
     "80": ("Retour à l'accueil", MenuController()),
     "90": ("Quitter l'application", MenuExitController()),
 }
