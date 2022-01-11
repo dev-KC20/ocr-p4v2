@@ -328,7 +328,7 @@ class MenuTournamentController:
                 else:
                     indice = 1
                 # retrieve the nummer of the former round
-                former_round_number = former_round_name[len(former_round_name) - indice:]
+                former_round_number = former_round_name[len(former_round_name) - indice :]
                 # check if its numerical & add 1
                 if former_round_number.isdigit():
                     next_round_number = int(former_round_number) + 1
@@ -355,6 +355,34 @@ class MenuTournamentController:
                 # add the round with its matches to the tournament
                 selected_tournament.add_round(next_round)
                 # and save them into DB
+                selected_tournament.save_tournament(selected_tournament, selected_tournament.get_tournament_id())
+
+        # close a tournament by computing the score and update the participant's
+        if chosen_option == "75":
+
+            # get the tournaments from DB
+            tournament_list_db = self.init_tournament()
+            new_tournament_view = TournamentView()
+
+            # remove tournaments not having all their expected rounds closed
+            # & the previous round not closed
+            tournament_list_with_players = [
+                x
+                for x in tournament_list_db.get_list_of_tournaments()
+                if len(x.get_tournament_rounds()) > 0
+                and len(x.get_tournament_rounds()) == x.get_tournament_round_number()
+                and x.get_tournament_last_closed_round() is not None
+            ]
+
+            # prompt the user for what tournament its next round is to be created
+            tournament_id = new_tournament_view.prompt_for_tournament_id(tournament_list_with_players)
+            if tournament_id is not None:
+                tournament_id = int(tournament_id)
+                selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
+                # compute the player's former score & update the related tournament
+                selected_tournament.update_players_score()
+
+                # and save the tournament status into DB
                 selected_tournament.save_tournament(selected_tournament, selected_tournament.get_tournament_id())
 
         next_menu = self.menu.get_action(chosen_option)

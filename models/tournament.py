@@ -332,6 +332,8 @@ class Tournament:
             if ronde.get_round_status() == ROUND_STATUS[2]:  # close
                 round_found = ronde
                 break
+            else:
+                break
         return round_found
 
     def get_tournament_to_close_round(self):
@@ -409,7 +411,7 @@ class Tournament:
                 # add the odd==last player in the first_half list
                 participants_is_odd = True
                 # pairing_list = list_players[number_participants - 1]
-                pairing_list_first_half.append(players_sorted[number_participants])
+                pairing_list_first_half.append(players_sorted[number_participants - 1])
 
             match_list = list(zip(pairing_list_first_half, pairing_list_second_half))
 
@@ -429,101 +431,44 @@ class Tournament:
                     dict1[key] += value
                     # dict1[key] = dict1[key] + value
                 if type == "list":
-                    # TODO: il serait judicieux de vérifier si un opposant n'existe pas déja avant de l'ajouter
+                    # TODO: it would be efficient to check if not already there before adding
                     dict1[key].extend(value)
 
             else:
                 dict1[key] = value
         return dict1
 
-    def pair_players_next_time(self):
-        """takes the list of player registred sort it by score then ELO and split in two half"""
-
-        list_players = []
+    def update_players_score(self):
+        """collects the scores from this non closed tournament & add them to the player's & closes the tournament"""
         # get the full player from player_id
         player_list_db = Players()
         player_list_db.load_players()
-        # get all tournaments for former scores & opponents
-        tournament_list_db = Tournaments()
-        tournament_list_db.load_tournaments()
-        all_tournament_list = tournament_list_db.get_list_of_tournaments()
-        # walk the tournaments & retrieve all rounds
+        # get this tournament's player's scores
         # all tournaments, all rounds but the current WIP one,
         former_players_scores = {}
-        former_players_opponents = {}
-        for tournoi in all_tournament_list:
-            rounds_list = tournoi.get_tournament_rounds()
+        if self.get_tournament_score_status() is False:
+            rounds_list = self.get_tournament_rounds()
             for ronde in rounds_list:
                 dict_score = ronde.get_player_score_opponent_round()[0]
-                dict_opponent = {}
-                # opponent should only be in regards of the current tournament
-                # TODO:
-                if tournoi.get_tournament_id() == self.get_tournament_id():
-                    dict_opponent = ronde.get_player_score_opponent_round()[1]
                 # player's score is the sum of point from previous matches
                 self.merge_add_dict(former_players_scores, dict_score, "float")
-                # TODO: opponent list: should remove the player himself and remove duplicate
-                self.merge_add_dict(former_players_opponents, dict_opponent, "list")
 
-        # build a list of player's attributs from the ones in tournament
-        for player_id in self._players:
-            player_object = player_list_db.get_player_by_id(player_id)
-            # player removed from DB in meantime
-            if player_object is not None:
-                player_score = float(former_players_scores[player_id])
-                player_rank = float(player_object.get_ranking())
-                # mult by million will prioritize score over rank
-                player_combined_rank = (10 ** 6 * player_score) + player_rank
-                # player_combined_rank = (1000000 * player_score) + player_rank
-                list_players.append(
-                    [player_id, player_combined_rank, player_score, player_rank, former_players_opponents[player_id]]
-                )
-        # sort the list of Player by combined score next rank
-        number_participants = len(list_players)
-        # need at least two players for tournament
-        if number_participants > 1:
-            # position [1] combined_ranking score first
-            list_players.sort(key=lambda x: x[1], reverse=True)
-            players_sorted = [x[0] for x in list_players]
-            noir = None
-            for idx in range(len(players_sorted)):
-                blanc = players_sorted[idx]
-                if blanc != noir:
-                    idx_opponent = idx + 1  # as per the score ranking
-                    black_players = players_sorted[idx_opponent:]
-                    for idx2, noir in enumerate(black_players):
-                        # leave when no more players
-                        if idx2 == len(black_players) - 1:
-                            break
+            # build a list of player's attributs from the ones in tournament
+            for player_id in self._players:
+                player_object = player_list_db.get_player_by_id(player_id)
+                # player removed from DB in meantime
+                if player_object is not None:
+                    # the score is either in the non closed tournaments and/or in the player's attribut
+                    player_score = float(former_players_scores[player_id]) 
+                    # & update the player's score
+                    player_object.set_score(player_score)
+                    # & save in the DB
+                    player_object.save_player(player_object,player_id)
+            self.set_tournament_score_status()
 
-                        # move to next competitor if blanc & noir were already opponents
-                        if noir not in former_players_opponents[blanc]:
-                            # if not, switch places & leave the loop
-                            (players_sorted[idx_opponent], players_sorted[idx_opponent + idx2]) = (
-                                players_sorted[idx_opponent + idx2],
-                                players_sorted[idx_opponent],
-                            )
-                            break
+ 
 
-            # participant # is odd
-            participants_is_odd = False
-            if (number_participants % 2) == 1:
-                # add the odd==last player in the first_half list
-                # so he will play against himself and win
-                participants_is_odd = True
-                # pairing_list = list_players[number_participants - 1]
-                players_sorted.append(players_sorted[-1])
 
-            new_match = []
-            for i in range(0, len(players_sorted), 2):
-                new_match.append((players_sorted[i], players_sorted[i + 1]))
-
-            print(new_match)
-
-        return (
-            new_match,
-            list_players[number_participants - 1][0] if participants_is_odd else None,
-        )
 
     def add_player_to_tournament(self, new_player: int):
         """ask for and register a player to the tournament."""
