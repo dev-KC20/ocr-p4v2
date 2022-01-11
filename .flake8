@@ -1,5 +1,8 @@
 [flake8]
 max-line-length = 119
+max-function-length=50
+doctests = True
+
 exclude=
     # unworthy time & CPU consomption
     .gitignore,
@@ -18,4 +21,3 @@ exclude=
     .vscode/,
     # There's no value in checking cache directories
     __pycache__,
-
