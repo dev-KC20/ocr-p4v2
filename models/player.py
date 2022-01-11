@@ -17,7 +17,7 @@ class Player:
         gender,
         initial_ranking,
         # opponent_met=None,
-        # point_earned=0,
+        point_earned=0.0,
         player_id=0
     ):
         self.__name = name
@@ -25,7 +25,7 @@ class Player:
         self.__birthdate = birthdate
         self.__gender = gender
         self.__initial_ranking = initial_ranking
-        # self.__score = point_earned
+        self.__score = point_earned
         self.__player_id = player_id
         # self.__opponent_met = [opponent_met]
         self._formated_player = " ".join(
@@ -37,7 +37,9 @@ class Player:
                 # "né",
                 # str(self.__birthdate),
                 str(self.__initial_ranking),
-                " ELO ",
+                " ELO  and earned ",
+                str(self.__score),
+                " points ",
             ]
         )
 
@@ -109,9 +111,9 @@ class Player:
             "birthdate": self.__birthdate,
             "gender": self.__gender,
             "initial_ranking": self.__initial_ranking,
-            # "score": self.__score,
+            "score": self.__score,
             # "opponent_met": self.__opponent_met,
-            "player_id": self.__player_id,
+            "player_id": self.__player_id
         }
 
     def save_player(self, new_player, player_id=None):
@@ -161,7 +163,7 @@ class Players:
     def get_players_by_score(self):
         """list of all players sorted by score then ranking"""
         self.__players_known.sort(
-            key=lambda x: (x.get_score(), x.get_ranking()), reverse=True
+            key=lambda x: (x.get_score(), x.get_score()), reverse=True
         )
         return self.__players_known
 
@@ -185,7 +187,7 @@ class Players:
                     joueur["birthdate"],
                     joueur["gender"],
                     joueur["initial_ranking"],
-                    # joueur["score"],
+                    float(joueur["score"]),
                     # joueur["opponent_met"],
                     joueur["player_id"]
                 )
@@ -200,4 +202,5 @@ class Players:
             # only append data records
             if joueur.__dict__.get("_name"):
                 _serialized_players.append(joueur.__dict__)
+            print( _serialized_players)
         return _serialized_players

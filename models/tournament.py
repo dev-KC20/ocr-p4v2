@@ -232,6 +232,7 @@ class Tournament:
         closing_date: datetime,
         round_number=ROUND_DEFAULT,
         time_control=CONTROLS[0],
+        score_updated=False,
         tournament_id=0,
     ):
         self._event_name = name
@@ -241,6 +242,7 @@ class Tournament:
         self._event_closing_date = closing_date
         self._round_number = int(round_number)
         self._time_control = time_control
+        self._score_updated = score_updated
         self._rounds = []
         self._players = []
         self.__tournament_id = tournament_id
@@ -267,6 +269,15 @@ class Tournament:
         """list of participant's id getter"""
         return self._players
 
+    def get_tournament_score_status(self):
+        """to know oif score updated on players getter"""
+        return self._score_updated
+
+    def set_tournament_score_status(self):
+        """to know oif score updated on players setter"""
+        self._score_updated = True
+
+        
     def get_tournament_round_number(self):
         """max of round  getter"""
         return self._round_number
@@ -547,6 +558,7 @@ class Tournament:
             "tournament_closing_date": self._event_closing_date,
             "tournament_round_number": self._round_number,
             "tournament_time_control": self._time_control,
+            "tournament_score_updated": self._score_updated,
             "tournament_players": self._players,
             "tournament_rounds": rounds_serialized,
         }
@@ -607,6 +619,7 @@ class Tournament:
             __serialized_tournament["tournament_closing_date"],
             __serialized_tournament["tournament_round_number"],
             __serialized_tournament["tournament_time_control"],
+            __serialized_tournament["tournament_score_updated"],
             __serialized_tournament["tournament_id"],
         )
 
@@ -652,6 +665,7 @@ class Tournaments:
                     tournoi["tournament_closing_date"],
                     tournoi["tournament_round_number"],
                     tournoi["tournament_time_control"],
+                    tournoi["tournament_score_updated"],
                     tournoi["tournament_id"],
                 )
             )

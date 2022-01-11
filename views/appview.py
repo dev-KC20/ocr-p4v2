@@ -84,10 +84,10 @@ class View:
                         j_j, m_m, aaaa = prompt_result.split("/")
                         datetime.datetime(int(aaaa), int(m_m), int(j_j))
                     except ValueError:
-                        raise Exception(
+                        print(
                             "Cette date n'est pas valide, \
                                 Merci de recommencer."
-                        ) from ValueError()
+                        ,ValueError())
                 # at this point the type was successfully checked
                 if closed_response is not None:
                     if prompt_result in closed_response:

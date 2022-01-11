@@ -56,4 +56,5 @@ class Database:
 
     def search_table_single(self, table, attribut, value):
         request = Query()
+        # filter the records
         return self.__open_table(table).search(request[attribut] == value)
