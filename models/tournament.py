@@ -336,6 +336,23 @@ class Tournament:
                 round_found = ronde
         return round_found
 
+    def get_tournament_players_by_name(self):
+        """list of participant's id sorted by name getter"""
+        list_players = []
+        # get the full player from player_id
+        player_list_db = Players()
+        player_list_db.load_players()
+        # build a list of Player class from the id's in tournament
+        for player_id in self._players:
+            player_object = player_list_db.get_player_by_id(player_id)
+            # player removed from DB in meantime
+            if player_object is not None:
+                list_players.append(player_object)
+        # sort the list of Player by rank
+        if len(list_players) > 0:
+            list_players.sort(key=lambda x: x.get_name(), reverse=False)
+
+        return list_players
     def get_tournament_players_by_rank(self):
         """list of participant's id sorted by rank getter"""
         list_players = []
