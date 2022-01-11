@@ -148,6 +148,11 @@ class Players:
         """list of all players"""
         return self.__players_known
 
+    def get_players_by_name(self):
+        """list of all players sorted by last name, first name"""
+        self.__players_known.sort(key=lambda x: x.get_name(), reverse=True)
+        return self.__players_known
+
     def get_players_by_rank(self):
         """list of all players sorted by initial_ranking"""
         self.__players_known.sort(key=lambda x: x.get_ranking(), reverse=True)

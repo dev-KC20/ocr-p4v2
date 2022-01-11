@@ -23,6 +23,7 @@ from views.appview import (
     RoundView,
     MatchView,
     PlayersReportView,
+    TournamentsReportView,
 )
 
 
@@ -309,7 +310,6 @@ class MenuTournamentController:
                 tournament_id = int(tournament_id)
                 selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
 
-                # TODO: pairing_next take into account the already met opponents
                 # do the next pairing of players == pairing step2
                 (
                     list_paired_match,
@@ -384,7 +384,7 @@ class MenuReportController:
             self.menu.add_menu(key, value)
         chosen_option = MenuView(self.menu).get_user_input()
 
-        # Show the players - by name sort 
+        # Show the players - by name sort
         if chosen_option == "10":
             # # get the tournaments from DB
             # tournament_list_db = self.init_tournament()
@@ -394,9 +394,9 @@ class MenuReportController:
             report_view = PlayersReportView()
             # show the tournaments and their players
             report_view.print_players(
-                                player_list_db.get_players_by_name(),
+                player_list_db.get_players_by_name(),
             )
-        # Show the players - by ranking 
+        # Show the players - by ranking
         if chosen_option == "20":
             # # get the tournaments from DB
             # tournament_list_db = self.init_tournament()
@@ -406,8 +406,53 @@ class MenuReportController:
             report_view = PlayersReportView()
             # show the tournaments and their players
             report_view.print_players(
-                                player_list_db.get_players_by_rank(),
+                player_list_db.get_players_by_rank(),
             )
+        # Show the players of a tournament - by name
+        if chosen_option == "30":
+            # get the tournaments from DB
+            tournament_list_db = self.init_tournament()
+            tournament_list = tournament_list_db.get_list_of_tournaments()
+            # prompt the user for what tournament its next round is to be created
+            tournament_report_view = TournamentsReportView()
+            tournament_id = tournament_report_view.prompt_for_tournament_id(tournament_list)
+            if tournament_id is not None:
+                tournament_id = int(tournament_id)
+                selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
+                report_view = TournamentsReportView()
+                # show the tournaments and their players
+                report_view.print_tournaments_players(selected_tournament.get_tournament_players_by_name())
+        # Show the players of a tournament - by ranking
+        if chosen_option == "40":
+            # get the tournaments from DB
+            tournament_list_db = self.init_tournament()
+            tournament_list = tournament_list_db.get_list_of_tournaments()
+            # prompt the user for what tournament its next round is to be created
+            tournament_report_view = TournamentsReportView()
+            tournament_id = tournament_report_view.prompt_for_tournament_id(tournament_list)
+            if tournament_id is not None:
+                tournament_id = int(tournament_id)
+                selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
+
+                report_view = TournamentsReportView()
+                # show the tournaments and their players
+                report_view.print_tournaments_players(selected_tournament.get_tournament_players_by_rank())
+
+        # Show the players of a tournament - by the result they made in tournament
+        if chosen_option == "45":
+            # get the tournaments from DB
+            tournament_list_db = self.init_tournament()
+            tournament_list = tournament_list_db.get_list_of_tournaments()
+            # prompt the user for what tournament its next round is to be created
+            tournament_report_view = TournamentsReportView()
+            tournament_id = tournament_report_view.prompt_for_tournament_id(tournament_list)
+            if tournament_id is not None:
+                tournament_id = int(tournament_id)
+                selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
+
+                report_view = TournamentsReportView()
+                # show the tournaments and their players
+                report_view.print_tournaments_players(selected_tournament.get_tournament_players_by_rank())
 
         next_menu = self.menu.get_action(chosen_option)
         return next_menu
@@ -445,6 +490,7 @@ MENU_TOURNAMENT = {
     "50": ("Fermer une ronde", MenuTournamentController()),
     "60": ("Mettre à jour les résultats", MenuTournamentController()),
     "70": ("Ouvrir ronde suivante", MenuTournamentController()),
+    "75": ("Clore un tournoi", MenuTournamentController()),
     "80": ("Retour à l'accueil", MenuController()),
     "90": ("Quitter l'application", MenuExitController()),
 }
@@ -454,6 +500,7 @@ MENU_REPORT = {
     "20": ("Afficher les joueurs - classement ", MenuReportController()),
     "30": ("Afficher les joueurs d'un tournoi - ordre alphabétique", MenuReportController()),
     "40": ("Afficher les joueurs d'un tournoi - classement ", MenuReportController()),
+    "45": ("Afficher les joueurs d'un tournoi - resultat ", MenuReportController()),
     "50": ("Afficher les tournois ", MenuReportController()),
     "60": ("Afficher les rondes d'un tournoi ", MenuReportController()),
     "70": ("Afficher les matchs d'un tournoi ", MenuReportController()),

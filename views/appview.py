@@ -384,7 +384,7 @@ class MatchView(View):
 
         return results_player1
 
-        
+
 class PlayersReportView(View):
     def __init__(self):
         self.play_once = False
@@ -403,3 +403,71 @@ class PlayersReportView(View):
             else:
                 self.play_once = True
 
+
+class TournamentsReportView(View):
+    def __init__(self):
+        self.play_once = False
+
+    def prompt_for_tournament_id(self, tournament_set: List[Tournament]):
+        """Prompt for id."""
+        self.play_once = False
+        tournament_id_set = []
+        for tournoi in tournament_set:
+            tournament_id_set.append(tournoi.get_tournament_id())
+
+        while not self.play_once:
+            print(CLEAR_TERMINAL)
+            line_len = 50
+            print("*" * line_len)
+            print(" Choisir un tournoi ")
+            print("*" * line_len)
+            print()
+            TournamentsReportView().print_tournaments(tournament_set, ask_confirm=False)
+
+            tournament_id = View().prompt("entrez l'id du tournoi", "int", "", tournament_id_set)
+
+            print()
+            print("*" * line_len)
+            # not asking confirmation to speed up UI
+
+            if tournament_id is None:
+                self.play_once = True
+
+            if tournament_id in tournament_id_set:
+                self.play_once = True
+            # self.play_once = View().prompt_to_exit("Entrer pour valider")
+
+        return tournament_id
+
+    def print_tournaments_players(self, player_set=None, ask_confirm=True):
+        """ """
+        while not self.play_once:
+            print(" Liste des joueurs du tournoi")
+            registred_show = True
+            for joueur in player_set:
+                if registred_show:
+                    print("inscrits:")
+                    registred_show = False
+                print(f" -> {joueur}")
+
+            if ask_confirm:
+                self.play_once = View().prompt_to_exit("(Entrée) pour continuer")
+            else:
+                self.play_once = True
+
+    def print_tournaments(
+        self,
+        tournament_set: List[Tournament],
+        ask_confirm=True,
+    ):
+        """ """
+        while not self.play_once:
+            print(" Liste des tournois de la base")
+            tournament_set.sort(reverse=False)
+            for tournoi in tournament_set:
+                if tournoi is not None:
+                    print(tournoi)
+            if ask_confirm:
+                self.play_once = View().prompt_to_exit("(Entrée) pour continuer")
+            else:
+                self.play_once = True
