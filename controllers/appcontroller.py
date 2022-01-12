@@ -478,7 +478,7 @@ class MenuReportController:
 
                 report_view = TournamentsReportView()
                 # show the tournaments and their players
-                report_view.print_tournaments_players(selected_tournament.get_tournament_players_by_rank())
+                report_view.print_tournaments_players(selected_tournament.get_tournament_players_by_score())
 
         next_menu = self.menu.get_action(chosen_option)
         return next_menu

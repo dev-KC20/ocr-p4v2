@@ -277,7 +277,6 @@ class Tournament:
         """to know oif score updated on players setter"""
         self._score_updated = True
 
-        
     def get_tournament_round_number(self):
         """max of round  getter"""
         return self._round_number
@@ -366,6 +365,7 @@ class Tournament:
             list_players.sort(key=lambda x: x.get_name(), reverse=False)
 
         return list_players
+
     def get_tournament_players_by_rank(self):
         """list of participant's id sorted by rank getter"""
         list_players = []
@@ -438,7 +438,6 @@ class Tournament:
                 dict1[key] = value
         return dict1
 
-
     def pair_players_next_time(self):
         """takes the list of player registred sort it by score then ELO and split in two half"""
 
@@ -460,7 +459,6 @@ class Tournament:
                 dict_score = ronde.get_player_score_opponent_round()[0]
                 dict_opponent = {}
                 # opponent should only be in regards of the current tournament
-                # TODO:
                 if tournoi.get_tournament_id() == self.get_tournament_id():
                     dict_opponent = ronde.get_player_score_opponent_round()[1]
                 # player's score is the sum of point from previous matches
@@ -511,11 +509,9 @@ class Tournament:
             # participant # is odd
             participants_is_odd = False
             if (number_participants % 2) == 1:
-                # add the odd==last player in the first_half list
-                # so he will play against himself and win
+                # add the odd==last player in the list
+                # so he will "play" against himself and win
                 participants_is_odd = True
-                # pairing_list = list_players[number_participants - 1]
-                # TODO: check -1  with odd tournament 
                 players_sorted.append(players_sorted[-1])
 
             new_match = []
@@ -528,6 +524,37 @@ class Tournament:
             new_match,
             list_players[number_participants - 1][0] if participants_is_odd else None,
         )
+
+    def get_tournament_players_by_score(self):
+        """collects the scores from this tournament & return a list"""
+        list_players = []
+        # get the full player from player_id
+        player_list_db = Players()
+        player_list_db.load_players()
+        # get this tournament's player's scores
+        # all tournaments, all rounds but the current WIP one,
+        former_players_scores = {}
+        # are there matches at all
+        if len(self.get_tournament_rounds_matchs()) > 0:
+            rounds_list = self.get_tournament_rounds()
+            for ronde in rounds_list:
+                dict_score = ronde.get_player_score_opponent_round()[0]
+                # player's score is the sum of point from previous matches
+                self.merge_add_dict(former_players_scores, dict_score, "float")
+        # build a list of Player class from the id's in tournament
+        for player_id in self._players:
+            # if there are no match resuslts set  zero
+            player_earned_points = former_players_scores[player_id] if len(former_players_scores) > 0 else 0
+            player_object = player_list_db.get_player_by_id(player_id)
+            # player removed from DB in meantime
+            if player_object is not None:
+
+                list_players.append((player_object, player_earned_points ))
+        # sort the list of Player by score
+        if len(list_players) > 0:
+            list_players.sort(key=lambda x: x[1], reverse=True)
+
+        return list_players
 
     def update_players_score(self):
         """collects the scores from this non closed tournament & add them to the player's & closes the tournament"""
@@ -550,16 +577,12 @@ class Tournament:
                 # player removed from DB in meantime
                 if player_object is not None:
                     # the score is either in the non closed tournaments and/or in the player's attribut
-                    player_score = float(former_players_scores[player_id]) 
+                    player_score = float(former_players_scores[player_id])
                     # & update the player's score
                     player_object.set_score(player_score)
                     # & save in the DB
-                    player_object.save_player(player_object,player_id)
+                    player_object.save_player(player_object, player_id)
             self.set_tournament_score_status()
-
- 
-
-
 
     def add_player_to_tournament(self, new_player: int):
         """ask for and register a player to the tournament."""

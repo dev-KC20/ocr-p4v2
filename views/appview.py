@@ -448,7 +448,10 @@ class TournamentsReportView(View):
                 if registred_show:
                     print("inscrits:")
                     registred_show = False
-                print(f" -> {joueur}")
+                if isinstance(joueur, tuple):
+                    print(f" -> {joueur[0]} à ce tournoi ==> {joueur[1]}")
+                else:
+                    print(f" -> {joueur} ")
 
             if ask_confirm:
                 self.play_once = View().prompt_to_exit("(Entrée) pour continuer")
