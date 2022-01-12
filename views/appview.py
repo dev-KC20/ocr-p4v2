@@ -86,8 +86,9 @@ class View:
                     except ValueError:
                         print(
                             "Cette date n'est pas valide, \
-                                Merci de recommencer."
-                        ,ValueError())
+                                Merci de recommencer.",
+                            ValueError(),
+                        )
                 # at this point the type was successfully checked
                 if closed_response is not None:
                     if prompt_result in closed_response:
@@ -469,7 +470,15 @@ class TournamentsReportView(View):
             tournament_set.sort(reverse=False)
             for tournoi in tournament_set:
                 if tournoi is not None:
-                    print(tournoi)
+                    print(f"{tournoi}")
+                    print(
+                        "Clos" if tournoi.get_tournament_score_status() else "Ouvert",
+                        f" avec {len(tournoi.get_tournament_players())} inscrits",
+                    )
+                    if len(tournoi.get_tournament_rounds()) > 0:
+                        print(f" joué en {len(tournoi.get_tournament_rounds()) } rondes ",
+                              f" soient {len([j for i in tournoi.get_tournament_rounds() for j in i.get_matchs()]) } matchs.")
+
             if ask_confirm:
                 self.play_once = View().prompt_to_exit("(Entrée) pour continuer")
             else:

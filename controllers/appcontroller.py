@@ -480,6 +480,15 @@ class MenuReportController:
                 # show the tournaments and their players
                 report_view.print_tournaments_players(selected_tournament.get_tournament_players_by_score())
 
+        # Show the tournaments
+        if chosen_option == "50":
+            # get the tournaments from DB
+            tournament_list_db = self.init_tournament()
+            tournament_list = tournament_list_db.get_list_of_tournaments()
+            # prompt the user for what tournament its next round is to be created
+            tournament_report_view = TournamentsReportView()
+            tournament_report_view.print_tournaments(tournament_list)
+          
         next_menu = self.menu.get_action(chosen_option)
         return next_menu
 
