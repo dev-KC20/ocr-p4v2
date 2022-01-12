@@ -459,6 +459,45 @@ class TournamentsReportView(View):
             else:
                 self.play_once = True
 
+    def print_tournaments_rounds(self, round_set=None, ask_confirm=True):
+        """ """
+        while not self.play_once:
+            print(" Liste des rondes du tournoi")
+            show_header = True
+            for ronde in round_set:
+                if show_header:
+                    print("rondes:")
+                    show_header = False
+                if isinstance(ronde, tuple):
+                    print(f" -> {ronde[0]} avec {len(ronde[1])} matchs")
+                else:
+                    print(f" -> {ronde} ")
+
+            if ask_confirm:
+                self.play_once = View().prompt_to_exit("(Entrée) pour continuer")
+            else:
+                self.play_once = True
+    def print_tournaments_matchs(self, round_set=None, player_set=None, ask_confirm=True):
+        """ """
+        while not self.play_once:
+            print(" Liste des rondes du tournoi")
+            show_header = True
+            for ronde in round_set:
+                if show_header:
+                    print("rondes:")
+                    show_header = False
+                if isinstance(ronde, tuple):
+                    print(f" -> {ronde[0]} avec : ")
+                    for jeu in ronde[1]:
+                        print(jeu)
+                else:
+                    print(f" -> {ronde} ")
+
+            if ask_confirm:
+                self.play_once = View().prompt_to_exit("(Entrée) pour continuer")
+            else:
+                self.play_once = True
+
     def print_tournaments(
         self,
         tournament_set: List[Tournament],

@@ -328,7 +328,7 @@ class MenuTournamentController:
                 else:
                     indice = 1
                 # retrieve the nummer of the former round
-                former_round_number = former_round_name[len(former_round_name) - indice:]
+                former_round_number = former_round_name[len(former_round_name) - indice :]
                 # check if its numerical & add 1
                 if former_round_number.isdigit():
                     next_round_number = int(former_round_number) + 1
@@ -488,7 +488,42 @@ class MenuReportController:
             # prompt the user for what tournament its next round is to be created
             tournament_report_view = TournamentsReportView()
             tournament_report_view.print_tournaments(tournament_list)
-          
+
+        # Show the rounds of a tournament
+        if chosen_option == "60":
+            # get the tournaments from DB
+            tournament_list_db = self.init_tournament()
+            tournament_list = tournament_list_db.get_list_of_tournaments()
+            # prompt the user for what tournament its next round is to be created
+            tournament_report_view = TournamentsReportView()
+            tournament_id = tournament_report_view.prompt_for_tournament_id(tournament_list)
+            if tournament_id is not None:
+                tournament_id = int(tournament_id)
+                selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
+
+                report_view = TournamentsReportView()
+                # show the tournaments and their players
+                report_view.print_tournaments_rounds(selected_tournament.get_tournament_rounds_matchs())
+
+        # Show the matchs of a tournament
+        if chosen_option == "70":
+            # get the tournaments from DB
+            tournament_list_db = self.init_tournament()
+            tournament_list = tournament_list_db.get_list_of_tournaments()
+            # prompt the user for what tournament its next round is to be created
+            tournament_report_view = TournamentsReportView()
+            tournament_id = tournament_report_view.prompt_for_tournament_id(tournament_list)
+            if tournament_id is not None:
+                tournament_id = int(tournament_id)
+                selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
+
+                report_view = TournamentsReportView()
+                # show the tournaments and their players
+                report_view.print_tournaments_matchs(
+                    selected_tournament.get_tournament_rounds_matchs(),
+                    selected_tournament.get_tournament_players_by_score(),
+                )
+
         next_menu = self.menu.get_action(chosen_option)
         return next_menu
 
