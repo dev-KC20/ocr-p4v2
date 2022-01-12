@@ -16,7 +16,6 @@ class Player:
         birthdate,
         gender,
         initial_ranking,
-        # opponent_met=None,
         point_earned=0.0,
         player_id=0
     ):
@@ -187,7 +186,8 @@ class Players:
                     joueur["birthdate"],
                     joueur["gender"],
                     joueur["initial_ranking"],
-                    float(joueur["score"]),
+                    joueur["score"],
+                    # float(joueur["score"]), # by default  it converts into float I believe
                     # joueur["opponent_met"],
                     joueur["player_id"]
                 )
@@ -202,5 +202,5 @@ class Players:
             # only append data records
             if joueur.__dict__.get("_name"):
                 _serialized_players.append(joueur.__dict__)
-            print( _serialized_players)
+            print(_serialized_players)
         return _serialized_players

@@ -328,7 +328,7 @@ class MenuTournamentController:
                 else:
                     indice = 1
                 # retrieve the nummer of the former round
-                former_round_number = former_round_name[len(former_round_name) - indice :]
+                former_round_number = former_round_name[len(former_round_name) - indice:]
                 # check if its numerical & add 1
                 if former_round_number.isdigit():
                     next_round_number = int(former_round_number) + 1
@@ -372,6 +372,7 @@ class MenuTournamentController:
                 if len(x.get_tournament_rounds()) > 0
                 and len(x.get_tournament_rounds()) == x.get_tournament_round_number()
                 and x.get_tournament_last_closed_round() is not None
+                and x.get_tournament_score_status() is False
             ]
 
             # prompt the user for what tournament its next round is to be created
@@ -426,11 +427,7 @@ class MenuReportController:
             )
         # Show the players - by ranking
         if chosen_option == "20":
-            # # get the tournaments from DB
-            # tournament_list_db = self.init_tournament()
-            # get the players from DB
             player_list_db = self.init_player()
-            # prepare the  view of the list of tournaments
             report_view = PlayersReportView()
             # show the tournaments and their players
             report_view.print_players(
@@ -450,6 +447,7 @@ class MenuReportController:
                 report_view = TournamentsReportView()
                 # show the tournaments and their players
                 report_view.print_tournaments_players(selected_tournament.get_tournament_players_by_name())
+
         # Show the players of a tournament - by ranking
         if chosen_option == "40":
             # get the tournaments from DB
