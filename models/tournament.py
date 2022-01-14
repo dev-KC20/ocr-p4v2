@@ -508,7 +508,7 @@ class Tournament:
                                 players_sorted[idx_opponent],
                             )
                             break
-                        # leave when no more players 
+                        # leave when no more players
                         if idx2 == len(black_players) - 1:
                             break
             participants_is_odd = False
