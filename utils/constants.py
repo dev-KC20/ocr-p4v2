@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # coding: utf-8
-"""all constants for chess tournaments manager."""
+"""Main constants for chess tournaments manager."""
 
 import datetime
 
