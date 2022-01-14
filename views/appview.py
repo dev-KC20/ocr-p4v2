@@ -1,7 +1,6 @@
 #! /usr/bin/env Python3
 # coding: utf-8
-""" tournament view.
-    """
+"""Present to the user all views with terminal interface."""
 from typing import List
 import datetime
 from utils.constants import CLEAR_TERMINAL, YESORNO, GENDER, CONTROLS, SCORE, ESCAPE_KEY
@@ -14,15 +13,17 @@ from models.tournament import Tournament
 
 
 class View:
+    """Provide a dedicated input function."""
+
     def prompt(self, text, type_response, default_response=None, closed_response=None):
-        """Attend une réponse conforme de l'utilisateur à l'input.
-        text: le texte d'invite à afficher à l'utilisateur
-        type_response: si test de valeur (int)>0 ou (date) attendu
-        default_response:  si rien n'est saisi, cette valeur sera retournée
-        closed_response: la réponse doit être une des valeurs de la liste
+        """Wait for a valid reply from user.
 
-        Pour "échapper" la saisie en cours, le caractère unique est "@" pour abandonner
+        text: string to show to the user
+        type_response: type of the reply car which is expected
+        default_response:  if only "entree" is hit, this reply will be used.
+        closed_response: the reply has to be part of this list.
 
+        To escape the current input form, type "@" to leave w/o saving.
         """
         if not isinstance(text, str):
             raise Exception("Merci de vérifier le texte passé à prompt()")
@@ -33,62 +34,39 @@ class View:
         else:
             default_response_print = str(default_response)
         input_text = (
-            text + " @ pour Esc " + " défaut=" + default_response_print + "):"
-            if default_response is not None
-            else " :"
+            text + " @ pour Esc" + " défaut=" + default_response_print + "):" if default_response is not None else " :"
         )
         while True:
             prompt_result = input(input_text)
             if prompt_result == ESCAPE_KEY:
-                return None
+                prompt_result = None
+                break
             if default_response is not None and len(prompt_result) == 0:
-                return default_response
+                prompt_result = default_response
+                break
             if len(prompt_result) != 0:
-                # check and change the type of reply
                 if type_response == "int":
                     if not prompt_result.isdigit():
-                        print(
-                            "Ce chiffre n'est pas valide, \
-                            Merci de recommencer."
-                        )
+                        print("Ce chiffre n'est pas valide, Merci de recommencer.")
                     try:
                         prompt_result = int(prompt_result)
                     except ValueError:
-                        print(
-                            "Ce chiffre n'est pas valide, \
-                            Merci de recommencer."
-                        )
+                        print("Ce chiffre n'est pas valide, Merci de recommencer.")
                         return None
                 if type_response == "float":
-                    # if isinstance(type(prompt_result), str):
                     if not prompt_result.replace(".", "", 1).isdigit():
-                        print(
-                            "Ce chiffre n'est pas valide, \
-                            Merci de recommencer."
-                        )
+                        print("Ce chiffre n'est pas valide, Merci de recommencer.")
                     else:
                         try:
                             prompt_result = float(prompt_result)
-                        except ValueError:
-                            raise Exception(
-                                "Ce chiffre n'est pas valide, \
-                                Merci de recommencer."
-                            ) from ValueError()
-                        except RuntimeError:
-                            raise Exception(
-                                "Ce chiffre n'est pas valide, \
-                                Merci de recommencer."
-                            )
+                        except (ValueError, RuntimeError):
+                            raise Exception("Ce chiffre n'est pas valide, Merci de recommencer.") from ValueError()
                 if type_response == "date":
                     try:
                         j_j, m_m, aaaa = prompt_result.split("/")
                         datetime.datetime(int(aaaa), int(m_m), int(j_j))
                     except ValueError:
-                        print(
-                            "Cette date n'est pas valide, \
-                                Merci de recommencer.",
-                            ValueError(),
-                        )
+                        print("Cette date n'est pas valide, Merci de recommencer.", ValueError())
                 # at this point the type was successfully checked
                 if closed_response is not None:
                     if prompt_result in closed_response:
@@ -99,7 +77,7 @@ class View:
         return prompt_result
 
     def prompt_to_exit(self, text=None):
-
+        """Ask to hit "Enter" before resuming."""
         exit_reply = View().prompt(
             text if text else "(Y + Enter) pour valider",
             "str",
@@ -111,7 +89,10 @@ class View:
 
 
 class PlayerView(View):
+    """Provide input functions to Player."""
+
     def __init__(self):
+        """Class init is to default the viewing loop."""
         self.play_once = False
 
     def prompt_for_player(self):
@@ -163,11 +144,14 @@ class PlayerView(View):
 
 
 class PlayersView(View):
+    """Provide input functions to Players."""
+
     def __init__(self):
+        """Class init is to default the viewing loop."""
         self.play_once = False
 
     def print_players(self, player_set: List[Player], ask_confirm=True):
-        """ """
+        """Print the players."""
         while not self.play_once:
             print(" Liste des joueurs de la base")
             # move to models & call in controllers
@@ -182,7 +166,10 @@ class PlayersView(View):
 
 
 class TournamentView(View):
+    """Provide input functions to Tournament."""
+
     def __init__(self):
+        """Class init is to default the viewing loop."""
         self.play_once = False
 
     def prompt_for_tournament(self):
@@ -288,7 +275,10 @@ class TournamentView(View):
 
 
 class TournamentsView(View):
+    """Provide input functions to Tournaments."""
+
     def __init__(self):
+        """Class init is to default the viewing loop."""
         self.play_once = False
 
     def print_tournaments(
@@ -297,7 +287,7 @@ class TournamentsView(View):
         player_set=None,
         ask_confirm=True,
     ):
-        """ """
+        """Print the tournaments and registred players."""
         while not self.play_once:
             print(" Liste des tournois de la base")
             tournament_set.sort(reverse=False)
@@ -313,8 +303,6 @@ class TournamentsView(View):
                                 if registred_show:
                                     print("inscrits:")
                                     registred_show = False
-                                # for participant in player_set:
-                                #     if participant == joueur:
                                 print(f" -> {joueur}")
                     for ronde, match_list in tournoi.get_tournament_rounds_matchs():
                         print(f" ==> {ronde}")
@@ -328,7 +316,10 @@ class TournamentsView(View):
 
 
 class RoundView(View):
+    """Provide input functions to Round."""
+
     def __init__(self):
+        """Class init is to default the viewing loop."""
         self.play_once = False
 
     def prompt_for_round_name(self, round_list):
@@ -354,7 +345,10 @@ class RoundView(View):
 
 
 class MatchView(View):
+    """Provide input functions to Match."""
+
     def __init__(self):
+        """Class init is to default the viewing loop."""
         self.play_once = False
 
     def prompt_for_match_result(self, match_list):
@@ -387,11 +381,14 @@ class MatchView(View):
 
 
 class PlayersReportView(View):
+    """Provide input functions to Players Report."""
+
     def __init__(self):
+        """Class init is to default the viewing loop."""
         self.play_once = False
 
     def print_players(self, player_set: List[Player], ask_confirm=True):
-        """ """
+        """Print the players for report usage."""
         while not self.play_once:
             print(" Liste des joueurs de la base")
             # move to models & call in controllers
@@ -406,7 +403,10 @@ class PlayersReportView(View):
 
 
 class TournamentsReportView(View):
+    """Provide input functions to TournamentsReport."""
+
     def __init__(self):
+        """Class init is to default the viewing loop."""
         self.play_once = False
 
     def prompt_for_tournament_id(self, tournament_set: List[Tournament]):
@@ -441,7 +441,7 @@ class TournamentsReportView(View):
         return tournament_id
 
     def print_tournaments_players(self, player_set=None, ask_confirm=True):
-        """ """
+        """Print the players who attended the tournament in reports."""
         while not self.play_once:
             print(" Liste des joueurs du tournoi")
             registred_show = True
@@ -460,7 +460,7 @@ class TournamentsReportView(View):
                 self.play_once = True
 
     def print_tournaments_rounds(self, round_set=None, ask_confirm=True):
-        """ """
+        """Print the rounds of a tournament in reports."""
         while not self.play_once:
             print(" Liste des rondes du tournoi")
             show_header = True
@@ -477,8 +477,9 @@ class TournamentsReportView(View):
                 self.play_once = View().prompt_to_exit("(Entrée) pour continuer")
             else:
                 self.play_once = True
+
     def print_tournaments_matchs(self, round_set=None, player_set=None, ask_confirm=True):
-        """ """
+        """Print the matchs of one tournament in reports."""
         while not self.play_once:
             print(" Liste des rondes du tournoi")
             show_header = True
@@ -503,7 +504,7 @@ class TournamentsReportView(View):
         tournament_set: List[Tournament],
         ask_confirm=True,
     ):
-        """ """
+        """Print the tournaments for reports."""
         while not self.play_once:
             print(" Liste des tournois de la base")
             tournament_set.sort(reverse=False)
@@ -515,8 +516,10 @@ class TournamentsReportView(View):
                         f" avec {len(tournoi.get_tournament_players())} inscrits",
                     )
                     if len(tournoi.get_tournament_rounds()) > 0:
-                        print(f" joué en {len(tournoi.get_tournament_rounds()) } rondes ",
-                              f" soient {len([j for i in tournoi.get_tournament_rounds() for j in i.get_matchs()]) } matchs.")
+                        print(
+                            f" joué en {len(tournoi.get_tournament_rounds()) } rondes et ",
+                            f" {len([j for i in tournoi.get_tournament_rounds() for j in i.get_matchs()])} matchs.",
+                        )
 
             if ask_confirm:
                 self.play_once = View().prompt_to_exit("(Entrée) pour continuer")
