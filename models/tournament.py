@@ -391,7 +391,10 @@ class Tournament:
         return list_players
 
     def pair_players_first_time(self):
-        """Sort by rank the list of player registred and split in two half."""
+        """Sort by rank the list of player registred and split in two half.
+
+        if odd # of players an extra match is added here
+        """
         list_players = []
         # get the full player from player_id
         player_list_db = Players()
@@ -420,8 +423,6 @@ class Tournament:
                 pairing_list_first_half.append(players_sorted[number_participants - 1])
 
             match_list = list(zip(pairing_list_first_half, pairing_list_second_half))
-
-            print(match_list)
 
         return (
             match_list,
@@ -466,7 +467,10 @@ class Tournament:
         return (all_players_scores, all_players_opponents)
 
     def pair_players_next_time(self):
-        """Sort the list of player by score and make matchs."""
+        """Sort the list of player by score and make matchs.
+
+        if odd # of players an extra match is added here
+        """
         list_players = []
         player_list_db = Players()
         player_list_db.load_players()
@@ -496,9 +500,6 @@ class Tournament:
                     idx_opponent = idx + 1  # as per the score ranking
                     black_players = players_sorted[idx_opponent:]
                     for idx2, noir in enumerate(black_players):
-                        # leave when no more players
-                        if idx2 == len(black_players) - 1:
-                            break
                         # move to next competitor if blanc & noir were already opponents
                         if noir not in former_players_opponents[blanc]:
                             # if not, switch places & leave the loop
@@ -506,6 +507,9 @@ class Tournament:
                                 players_sorted[idx_opponent + idx2],
                                 players_sorted[idx_opponent],
                             )
+                            break
+                        # leave when no more players 
+                        if idx2 == len(black_players) - 1:
                             break
             participants_is_odd = False
             if (number_participants % 2) == 1:
