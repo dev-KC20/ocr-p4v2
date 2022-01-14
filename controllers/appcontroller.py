@@ -201,9 +201,7 @@ class MenuTournamentController:
             (list_paired_match, odd_winner_id) = selected_tournament.pair_players_next_time()
             # get the previous round name
             former_round = selected_tournament.get_tournament_last_closed_round()
-            # and its name
             former_round_name = former_round.get_round_name()
-            # and the planned number of rounds
             number_rounds_tournament = selected_tournament.get_tournament_round_number()
             # how many digits for the numbering
             indice = 2 if number_rounds_tournament > 9 and number_rounds_tournament < 99 else 1
@@ -226,8 +224,8 @@ class MenuTournamentController:
             # if odd_winner_id:
             #     # will be granted victory later
             #     winner_match = (odd_winner_id, odd_winner_id)
-                # # create a match against himself for the odd player
-                # next_round.add_match(winner_match)
+            # # create a match against himself for the odd player
+            # next_round.add_match(winner_match)
             # add the round with its matches to the tournament
             selected_tournament.add_round(next_round)
             # and save them into DB
@@ -245,6 +243,113 @@ class MenuTournamentController:
             tournament_list_db.get_list_of_tournaments(),
             player_list_db.get_players_by_rank(),
         )
+
+    def add_player_to_one_tournament(self):
+        """Add one player to the tournament."""
+        # get the tournaments from DB
+        tournament_list_db = self.init_tournament()
+        # prepare the  view for selecting one tournament
+        new_tournament_view = TournamentView()
+        # remove tournament having already rounds set as no more player should be added
+        tournament_list_wo_rounds = [
+            x for x in tournament_list_db.get_list_of_tournaments() if len(x.get_tournament_rounds()) == 0
+        ]
+        tournament_id = int(new_tournament_view.prompt_for_tournament_id(tournament_list_wo_rounds))
+        # get the players from DB
+        player_list_db = self.init_player()
+        # prepare the  view for selecting one player
+        new_tournament_view = TournamentView()
+        player_id = int(new_tournament_view.prompt_for_player_id(player_list_db.get_list_of_players()))
+        # create a tournament object from its tournament id
+        selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
+        # save only player's id, not full Player class
+        selected_tournament.add_player_to_tournament(player_id)
+        # provide tournament_id to update existing tournament
+        selected_tournament.save_tournament(selected_tournament, tournament_id)
+
+    def close_tournament_round(self):
+        """Close the round accordingly to time control."""
+        tournament_list_db = self.init_tournament()
+        new_tournament_view = TournamentView()
+        # remove tournaments w/o round to close == no end time
+        tournament_list_with_round = [
+            x for x in tournament_list_db.get_list_of_tournaments() if x.get_tournament_to_finish_round() is not None
+        ]
+        tournament_id = new_tournament_view.prompt_for_tournament_id(tournament_list_with_round)
+        if tournament_id is not None:
+            tournament_id = int(tournament_id)
+            selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
+            selected_round_to_close = selected_tournament.get_tournament_to_finish_round()
+            selected_round_to_close.close_round()
+            selected_tournament.save_tournament(selected_tournament, selected_tournament.get_tournament_id())
+
+    def register_matchs_results(self):
+        """Let the manager register the results of the closed round."""
+        tournament_list_db = self.init_tournament()
+        new_tournament_view = TournamentView()
+
+        # keep only tournaments that are finished
+        tournament_list_to_register = [
+            x for x in tournament_list_db.get_list_of_tournaments() if x.get_tournament_to_close_round() is not None
+        ]
+        # ask user to select tournament & retrieve its rounds
+
+        tournament_id = new_tournament_view.prompt_for_tournament_id(tournament_list_to_register)
+        if tournament_id is not None:
+            tournament_id = int(tournament_id)
+            selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
+            # get the round attached to selected tournament?
+            round_to_close = selected_tournament.get_tournament_to_close_round()
+            round_name_to_close = [round_to_close.get_round_name()]
+            new_round_view = RoundView()
+            # ask user to select a round to register
+            # normally there should be only one but who knows in the future ;)
+            round_name_to_register_in = new_round_view.prompt_for_round_name(round_name_to_close)
+            # no escape request
+            if round_name_to_register_in is not None:
+                # get the full Round object
+                if round_to_close.get_round_name() == round_name_to_register_in:
+                    # prepare the view for entering results
+                    new_match_view = MatchView()
+                    # list of player1 scores for all matches of the round
+                    waiting_result_matchs = round_to_close.get_matchs()
+                    result_player1 = new_match_view.prompt_for_match_result(waiting_result_matchs)
+                    # walk the match and apply set_match_score in sequence
+                    i = 0
+                    for jeu in waiting_result_matchs:
+                        jeu.set_match_score(float(result_player1[i]), 1.0 - float(result_player1[i]))
+                        i += 1
+                    # special odd number of player case :
+                    # he is set as player1 == player2 then he wins
+                    selected_tournament.save_tournament(selected_tournament, selected_tournament.get_tournament_id())
+
+    def close_tournament(self):
+        """Have the score of tournament registred against players."""
+        # get the tournaments from DB
+        tournament_list_db = self.init_tournament()
+        new_tournament_view = TournamentView()
+
+        # remove tournaments not having all their expected rounds closed
+        # & the previous round not closed
+        tournament_list_with_players = [
+            x
+            for x in tournament_list_db.get_list_of_tournaments()
+            if len(x.get_tournament_rounds()) > 0
+            and len(x.get_tournament_rounds()) == x.get_tournament_round_number()
+            and x.get_tournament_last_closed_round() is not None
+            and x.get_tournament_score_status() is False
+        ]
+
+        # prompt the user for what tournament its next round is to be created
+        tournament_id = new_tournament_view.prompt_for_tournament_id(tournament_list_with_players)
+        if tournament_id is not None:
+            tournament_id = int(tournament_id)
+            selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
+            # compute the player's former score & update the related tournament
+            selected_tournament.update_players_score()
+
+            # and save the tournament status into DB
+            selected_tournament.save_tournament(selected_tournament, selected_tournament.get_tournament_id())
 
     def run(self):
         """Manage the Tournament menu & option chosen."""
@@ -269,26 +374,7 @@ class MenuTournamentController:
 
         # Add players to one tournament
         if chosen_option == "30":
-            # get the tournaments from DB
-            tournament_list_db = self.init_tournament()
-            # prepare the  view for selecting one tournament
-            new_tournament_view = TournamentView()
-            # remove tournament having already rounds set as no more player should be added
-            tournament_list_wo_rounds = [
-                x for x in tournament_list_db.get_list_of_tournaments() if len(x.get_tournament_rounds()) == 0
-            ]
-            tournament_id = int(new_tournament_view.prompt_for_tournament_id(tournament_list_wo_rounds))
-            # get the players from DB
-            player_list_db = self.init_player()
-            # prepare the  view for selecting one player
-            new_tournament_view = TournamentView()
-            player_id = int(new_tournament_view.prompt_for_player_id(player_list_db.get_list_of_players()))
-            # create a tournament object from its tournament id
-            selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
-            # save only player's id, not full Player class
-            selected_tournament.add_player_to_tournament(player_id)
-            # provide tournament_id to update existing tournament
-            selected_tournament.save_tournament(selected_tournament, tournament_id)
+            self.add_player_to_one_tournament()
 
         # open the tournament & create the first round & matchs
         if chosen_option == "40":
@@ -296,65 +382,11 @@ class MenuTournamentController:
 
         # Finishing of a given Round of a given Tournament : time's over!
         if chosen_option == "50":
-            tournament_list_db = self.init_tournament()
-            new_tournament_view = TournamentView()
-            # remove tournaments w/o round to close == no end time
-            tournament_list_with_round = [
-                x
-                for x in tournament_list_db.get_list_of_tournaments()
-                if x.get_tournament_to_finish_round() is not None
-            ]
-            tournament_id = new_tournament_view.prompt_for_tournament_id(tournament_list_with_round)
-            if tournament_id is not None:
-                tournament_id = int(tournament_id)
-                selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
-                selected_round_to_close = selected_tournament.get_tournament_to_finish_round()
-                selected_round_to_close.close_round()
-                selected_tournament.save_tournament(selected_tournament, selected_tournament.get_tournament_id())
+            self.close_tournament_round()
 
         # Register matches results
         if chosen_option == "60":
-            tournament_list_db = self.init_tournament()
-            new_tournament_view = TournamentView()
-
-            # keep only tournaments that are finished
-            tournament_list_to_register = [
-                x
-                for x in tournament_list_db.get_list_of_tournaments()
-                if x.get_tournament_to_close_round() is not None
-            ]
-            # ask user to select tournament & retrieve its rounds
-
-            tournament_id = new_tournament_view.prompt_for_tournament_id(tournament_list_to_register)
-            if tournament_id is not None:
-                tournament_id = int(tournament_id)
-                selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
-                # get the round attached to selected tournament?
-                round_to_close = selected_tournament.get_tournament_to_close_round()
-                round_name_to_close = [round_to_close.get_round_name()]
-                new_round_view = RoundView()
-                # ask user to select a round to register
-                # normally there should be only one but who knows in the future ;)
-                round_name_to_register_in = new_round_view.prompt_for_round_name(round_name_to_close)
-                # no escape request
-                if round_name_to_register_in is not None:
-                    # get the full Round object
-                    if round_to_close.get_round_name() == round_name_to_register_in:
-                        # prepare the view for entering results
-                        new_match_view = MatchView()
-                        # list of player1 scores for all matches of the round
-                        waiting_result_matchs = round_to_close.get_matchs()
-                        result_player1 = new_match_view.prompt_for_match_result(waiting_result_matchs)
-                        # walk the match and apply set_match_score in sequence
-                        i = 0
-                        for jeu in waiting_result_matchs:
-                            jeu.set_match_score(float(result_player1[i]), 1.0 - float(result_player1[i]))
-                            i += 1
-                        # special odd number of player case :
-                        # he is set as player1 == player2 then he wins
-                        selected_tournament.save_tournament(
-                            selected_tournament, selected_tournament.get_tournament_id()
-                        )
+            self.register_matchs_results()
 
         # create the next round & matchs == pairing step 2+
         if chosen_option == "70":
@@ -362,32 +394,7 @@ class MenuTournamentController:
 
         # close a tournament by computing the score and update the participant's
         if chosen_option == "75":
-
-            # get the tournaments from DB
-            tournament_list_db = self.init_tournament()
-            new_tournament_view = TournamentView()
-
-            # remove tournaments not having all their expected rounds closed
-            # & the previous round not closed
-            tournament_list_with_players = [
-                x
-                for x in tournament_list_db.get_list_of_tournaments()
-                if len(x.get_tournament_rounds()) > 0
-                and len(x.get_tournament_rounds()) == x.get_tournament_round_number()
-                and x.get_tournament_last_closed_round() is not None
-                and x.get_tournament_score_status() is False
-            ]
-
-            # prompt the user for what tournament its next round is to be created
-            tournament_id = new_tournament_view.prompt_for_tournament_id(tournament_list_with_players)
-            if tournament_id is not None:
-                tournament_id = int(tournament_id)
-                selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
-                # compute the player's former score & update the related tournament
-                selected_tournament.update_players_score()
-
-                # and save the tournament status into DB
-                selected_tournament.save_tournament(selected_tournament, selected_tournament.get_tournament_id())
+            self.close_tournament()
 
         next_menu = self.menu.get_action(chosen_option)
         return next_menu
@@ -413,6 +420,97 @@ class MenuReportController:
 
         return tournament_list
 
+    def show_matchs_tournament(self):
+        """Show the matchs of one tournament."""
+        # get the tournaments from DB
+        tournament_list_db = self.init_tournament()
+        tournament_list = tournament_list_db.get_list_of_tournaments()
+        # prompt the user for what tournament its next round is to be created
+        tournament_report_view = TournamentsReportView()
+        tournament_id = tournament_report_view.prompt_for_tournament_id(tournament_list)
+        if tournament_id is not None:
+            tournament_id = int(tournament_id)
+            selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
+
+            report_view = TournamentsReportView()
+            # show the tournaments and their players
+            report_view.print_tournaments_matchs(
+                selected_tournament.get_tournament_rounds_matchs(),
+                selected_tournament.get_tournament_players_by_score(),
+            )
+
+    def show_rounds_tournament(self):
+        """Show the rounds of one tournament."""
+        # get the tournaments from DB
+        tournament_list_db = self.init_tournament()
+        tournament_list = tournament_list_db.get_list_of_tournaments()
+        # prompt the user for what tournament its next round is to be created
+        tournament_report_view = TournamentsReportView()
+        tournament_id = tournament_report_view.prompt_for_tournament_id(tournament_list)
+        if tournament_id is not None:
+            tournament_id = int(tournament_id)
+            selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
+
+            report_view = TournamentsReportView()
+            # show the tournaments and their players
+            report_view.print_tournaments_rounds(selected_tournament.get_tournament_rounds_matchs())
+
+    def show_tournaments(self):
+        """Show the tournaments."""
+        # get the tournaments from DB
+        tournament_list_db = self.init_tournament()
+        tournament_list = tournament_list_db.get_list_of_tournaments()
+        # prompt the user for what tournament its next round is to be created
+        tournament_report_view = TournamentsReportView()
+        tournament_report_view.print_tournaments(tournament_list)
+
+    def show_players_results_tournament(self):
+        """Show the players sorted by score results of one tournament."""
+        # get the tournaments from DB
+        tournament_list_db = self.init_tournament()
+        tournament_list = tournament_list_db.get_list_of_tournaments()
+        # prompt the user for what tournament its next round is to be created
+        tournament_report_view = TournamentsReportView()
+        tournament_id = tournament_report_view.prompt_for_tournament_id(tournament_list)
+        if tournament_id is not None:
+            tournament_id = int(tournament_id)
+            selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
+
+            report_view = TournamentsReportView()
+            # show the tournaments and their players
+            report_view.print_tournaments_players(selected_tournament.get_tournament_players_by_score())
+
+    def show_players_rank_tournament(self):
+        """Show the players sorted by rank of one tournament."""
+        # get the tournaments from DB
+        tournament_list_db = self.init_tournament()
+        tournament_list = tournament_list_db.get_list_of_tournaments()
+        # prompt the user for what tournament its next round is to be created
+        tournament_report_view = TournamentsReportView()
+        tournament_id = tournament_report_view.prompt_for_tournament_id(tournament_list)
+        if tournament_id is not None:
+            tournament_id = int(tournament_id)
+            selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
+
+            report_view = TournamentsReportView()
+            # show the tournaments and their players
+            report_view.print_tournaments_players(selected_tournament.get_tournament_players_by_rank())
+
+    def show_players_tournament(self):
+        """Show the players sorted by name of one tournament."""
+        # get the tournaments from DB
+        tournament_list_db = self.init_tournament()
+        tournament_list = tournament_list_db.get_list_of_tournaments()
+        # prompt the user for what tournament its next round is to be created
+        tournament_report_view = TournamentsReportView()
+        tournament_id = tournament_report_view.prompt_for_tournament_id(tournament_list)
+        if tournament_id is not None:
+            tournament_id = int(tournament_id)
+            selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
+            report_view = TournamentsReportView()
+            # show the tournaments and their players
+            report_view.print_tournaments_players(selected_tournament.get_tournament_players_by_name())
+
     def run(self):
         """Manage the Report menu & option chosen."""
         self.menu = Menu("Gérer les rapports")
@@ -423,8 +521,6 @@ class MenuReportController:
 
         # Show the players - by name sort
         if chosen_option == "10":
-            # # get the tournaments from DB
-            # tournament_list_db = self.init_tournament()
             # get the players from DB
             player_list_db = self.init_player()
             # prepare the  view of the list of tournaments
@@ -443,94 +539,27 @@ class MenuReportController:
             )
         # Show the players of a tournament - by name
         if chosen_option == "30":
-            # get the tournaments from DB
-            tournament_list_db = self.init_tournament()
-            tournament_list = tournament_list_db.get_list_of_tournaments()
-            # prompt the user for what tournament its next round is to be created
-            tournament_report_view = TournamentsReportView()
-            tournament_id = tournament_report_view.prompt_for_tournament_id(tournament_list)
-            if tournament_id is not None:
-                tournament_id = int(tournament_id)
-                selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
-                report_view = TournamentsReportView()
-                # show the tournaments and their players
-                report_view.print_tournaments_players(selected_tournament.get_tournament_players_by_name())
+            self.show_players_tournament()
 
         # Show the players of a tournament - by ranking
         if chosen_option == "40":
-            # get the tournaments from DB
-            tournament_list_db = self.init_tournament()
-            tournament_list = tournament_list_db.get_list_of_tournaments()
-            # prompt the user for what tournament its next round is to be created
-            tournament_report_view = TournamentsReportView()
-            tournament_id = tournament_report_view.prompt_for_tournament_id(tournament_list)
-            if tournament_id is not None:
-                tournament_id = int(tournament_id)
-                selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
-
-                report_view = TournamentsReportView()
-                # show the tournaments and their players
-                report_view.print_tournaments_players(selected_tournament.get_tournament_players_by_rank())
+            self.show_players_rank_tournament()
 
         # Show the players of a tournament - by the result they made in tournament
         if chosen_option == "45":
-            # get the tournaments from DB
-            tournament_list_db = self.init_tournament()
-            tournament_list = tournament_list_db.get_list_of_tournaments()
-            # prompt the user for what tournament its next round is to be created
-            tournament_report_view = TournamentsReportView()
-            tournament_id = tournament_report_view.prompt_for_tournament_id(tournament_list)
-            if tournament_id is not None:
-                tournament_id = int(tournament_id)
-                selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
-
-                report_view = TournamentsReportView()
-                # show the tournaments and their players
-                report_view.print_tournaments_players(selected_tournament.get_tournament_players_by_score())
+            self.show_players_results_tournament()
 
         # Show the tournaments
         if chosen_option == "50":
-            # get the tournaments from DB
-            tournament_list_db = self.init_tournament()
-            tournament_list = tournament_list_db.get_list_of_tournaments()
-            # prompt the user for what tournament its next round is to be created
-            tournament_report_view = TournamentsReportView()
-            tournament_report_view.print_tournaments(tournament_list)
+            self.show_tournaments()
 
         # Show the rounds of a tournament
         if chosen_option == "60":
-            # get the tournaments from DB
-            tournament_list_db = self.init_tournament()
-            tournament_list = tournament_list_db.get_list_of_tournaments()
-            # prompt the user for what tournament its next round is to be created
-            tournament_report_view = TournamentsReportView()
-            tournament_id = tournament_report_view.prompt_for_tournament_id(tournament_list)
-            if tournament_id is not None:
-                tournament_id = int(tournament_id)
-                selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
-
-                report_view = TournamentsReportView()
-                # show the tournaments and their players
-                report_view.print_tournaments_rounds(selected_tournament.get_tournament_rounds_matchs())
+            self.show_rounds_tournament()
 
         # Show the matchs of a tournament
         if chosen_option == "70":
-            # get the tournaments from DB
-            tournament_list_db = self.init_tournament()
-            tournament_list = tournament_list_db.get_list_of_tournaments()
-            # prompt the user for what tournament its next round is to be created
-            tournament_report_view = TournamentsReportView()
-            tournament_id = tournament_report_view.prompt_for_tournament_id(tournament_list)
-            if tournament_id is not None:
-                tournament_id = int(tournament_id)
-                selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
-
-                report_view = TournamentsReportView()
-                # show the tournaments and their players
-                report_view.print_tournaments_matchs(
-                    selected_tournament.get_tournament_rounds_matchs(),
-                    selected_tournament.get_tournament_players_by_score(),
-                )
+            self.show_matchs_tournament()
 
         next_menu = self.menu.get_action(chosen_option)
         return next_menu
