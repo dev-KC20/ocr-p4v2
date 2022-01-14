@@ -1,7 +1,6 @@
 #! /usr/bin/env Python3
 # coding: utf-8
-""" Player who will participate to the tournament.
-    """
+"""Player who will participate to the tournament."""
 from utils.database import Database
 from utils.constants import DB_TABLE_PLAYER
 
@@ -19,6 +18,7 @@ class Player:
         point_earned=0.0,
         player_id=0
     ):
+        """Player class init is a name, its ELO ranking & last score."""
         self.__name = name
         self.__firstname = firstname
         self.__birthdate = birthdate
@@ -44,7 +44,7 @@ class Player:
 
     # sort by rank
     def __lt__(self, obj):
-        """ less than to enable sorting btw players
+        """Less than to enable sorting btw players.
 
         input: obj is one player's id of type integer
         """
@@ -52,7 +52,7 @@ class Player:
         # return (self.__initial_ranking) < (obj.get_ranking())
 
     def __eq__(self, obj):
-        """ equal to enable sorting btw players
+        """Equal to enable sorting btw players.
 
         input: obj is one player's id of type integer
         """
@@ -67,19 +67,19 @@ class Player:
     #     return (self.__player_id) == (obj.get_player_id())
 
     def get_name(self):
-        """name getter"""
+        """Name getter."""
         return self.__name
 
     def get_player_id(self):
-        """player_id getter"""
+        """Player_id getter."""
         return self.__player_id
 
     def get_score(self):
-        """player score getter"""
+        """Player score getter."""
         return self.__score
 
     def set_ranking(self, ranking):
-        """The player rank is updated according to match result."""
+        """Update the player rank according to match result."""
         self.__initial_ranking = ranking
 
     # def get_opponent_met(self):
@@ -91,19 +91,19 @@ class Player:
     #     self.__opponent_met.append(opponent)
 
     def get_ranking(self):
-        """player rank getter"""
+        """Player rank getter."""
         return self.__initial_ranking
 
     def set_score(self, score):
-        """The player rank is updated according to match result."""
+        """Update the player rank according to match result."""
         self.__score += score
 
     def __str__(self):
-
+        """Improve readability when printed."""
         return self._formated_player
 
     def serialize_player(self):
-        """provide serialized version of one player"""
+        """Serialise one player."""
         return {
             "name": self.__name,
             "firstname": self.__firstname,
@@ -116,7 +116,8 @@ class Player:
         }
 
     def save_player(self, new_player, player_id=None):
-        """Save one player
+        """Save one player.
+
         Save uses the fact that a class has a description as dictionnary
         the meta structure record is avoided.
         """
@@ -134,40 +135,41 @@ class Players:
     """List of know chess players."""
 
     def __init__(self):
+        """Players class init is just a list of players."""
         self.__players_known = []
 
     def add_player_to_list(self, new_player: Player):
-        """register a player to the local list of player."""
+        """Register a player to the local list of player."""
         self.__players_known.append(new_player)
         return True
 
     def get_number_of_players(self):
-        """number of player."""
+        """Get the number of players."""
         return len(self.__players_known)
 
     def get_list_of_players(self):
-        """list of all players"""
+        """Get the list of players."""
         return self.__players_known
 
     def get_players_by_name(self):
-        """list of all players sorted by last name, first name"""
+        """Get the list of all players sorted by last name."""
         self.__players_known.sort(key=lambda x: x.get_name(), reverse=True)
         return self.__players_known
 
     def get_players_by_rank(self):
-        """list of all players sorted by initial_ranking"""
+        """Get a list of all players sorted by initial_ranking."""
         self.__players_known.sort(key=lambda x: x.get_ranking(), reverse=True)
         return self.__players_known
 
     def get_players_by_score(self):
-        """list of all players sorted by score then ranking"""
+        """Get a list of all players sorted by score then rank."""
         self.__players_known.sort(
-            key=lambda x: (x.get_score(), x.get_score()), reverse=True
+            key=lambda x: (x.get_score(), x.get_ranking()), reverse=True
         )
         return self.__players_known
 
     def get_player_by_id(self, player_id):
-        """return one player based on his id"""
+        """Get one player instance based on his id."""
         found_player = None
         for player in self.__players_known:
             if player.get_player_id() == player_id:
@@ -175,7 +177,7 @@ class Players:
         return found_player
 
     def load_players(self):
-        """Load saved players into Players()"""
+        """Load saved players into Players()."""
         __serialized_players = []
         __serialized_players = Database().get_table_all(DB_TABLE_PLAYER)
         for joueur in __serialized_players:
@@ -195,8 +197,7 @@ class Players:
         # print(f" {len(self.__players_known)} joueurs chargés")
 
     def serialize_players(self):
-        """Serialize list of players"""
-
+        """Serialize list of players."""
         _serialized_players = []
         for joueur in self.__players_known:
             # only append data records
