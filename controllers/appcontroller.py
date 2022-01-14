@@ -28,28 +28,30 @@ from views.appview import (
 
 
 class AppController:
-    """manage the menu sytem."""
+    """Manage the menu sytem."""
 
     def __init__(self):
+        """Class init to hold current views."""
         self.controller = None
         self.players_view = None
         self.tournament_view = None
 
     def run(self):
-        """manage menus"""
+        """Manage current active menu."""
         self.controller = MenuController().run()
         while self.controller:
             self.controller = self.controller.run()
 
 
 class MenuController:
-    """manage the Home menu"""
+    """Manage the Home menu."""
 
     def __init__(self):
+        """Class init to hold the menu instance."""
         self.menu = None
 
     def run(self):
-        """ """
+        """Manage the menu system & option chosen."""
         self.menu = Menu("Accueil")
         for key, value in MENU_HOME.items():
             self.menu.add_menu(key, value)
@@ -59,16 +61,20 @@ class MenuController:
 
 
 class MenuPlayerController:
+    """Manage the Player menu."""
+
     def __init__(self):
+        """Class init to hold the menu instance."""
         self.menu = None
 
     def init_player(self):
+        """Initiate the DB connection to Player table."""
         player_list = Players()
         player_list.load_players()
         return player_list
 
     def run(self):
-        """ """
+        """Manage the Player menu & option chosen."""
         self.menu = Menu("Gérer les joueurs")
 
         for key, value in MENU_PLAYER.items():
@@ -110,22 +116,138 @@ class MenuPlayerController:
 
 
 class MenuTournamentController:
+    """Manage the Tournament menu."""
+
     def __init__(self):
+        """Class init to hold the menu instance."""
         self.menu = None
 
     def init_player(self):
+        """Initiate the DB connection to Player table."""
         player_list = Players()
         player_list.load_players()
         return player_list
 
     def init_tournament(self):
+        """Initiate the DB connection to Tournament table."""
         tournament_list = Tournaments()
         tournament_list.load_tournaments()
 
         return tournament_list
 
+    def open_tournament_create_first_round(self):
+        """Open tournament, create first round & matchs == pairing step 1."""
+        tournament_list_db = self.init_tournament()
+        new_tournament_view = TournamentView()
+        # remove tournament having less than 2 players
+        # also remove tournament having already rounds
+        tournament_list_with_players = [
+            x
+            for x in tournament_list_db.get_list_of_tournaments()
+            if len(x.get_tournament_players()) > 1 and len(x.get_tournament_rounds()) == 0
+        ]
+        tournament_id = new_tournament_view.prompt_for_tournament_id(tournament_list_with_players)
+        if tournament_id is not None:
+            tournament_id = int(tournament_id)
+            selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
+            # do the initial pairing of players
+            (
+                list_paired_match,
+                odd_winner_id,
+            ) = selected_tournament.pair_players_first_time()
+            # create the initial round
+            num_ronde = 1
+            round_first = Round(
+                "Ronde" + str(num_ronde),
+                datetime.date.today(),
+                datetime.datetime.now().time(),
+            )
+            # Next generate matches from initial pairing
+            for i in range(len(list_paired_match)):
+                new_match = list_paired_match[i]
+                round_first.add_match(new_match)
+            # odd player plays against himself and scores 1
+            # TODO: if odd too many matchs for the oddp player
+            # if odd_winner_id:
+            #     # will be granted victory later
+            #     winner_match = (odd_winner_id, odd_winner_id)
+            #     # create a match against himself for the odd player
+            #     round_first.add_match(winner_match)
+            # add the round with its matches to the tournament
+            selected_tournament.add_round(round_first)
+            # and save them into DB
+            selected_tournament.save_tournament(selected_tournament, selected_tournament.get_tournament_id())
+
+    def create_next_round_and_match(self):
+        """Create the next round & matchs == pairing step 2."""
+        tournament_list_db = self.init_tournament()
+        new_tournament_view = TournamentView()
+        # remove tournaments w/o first round over & their rounds not yet reached & the previous round not closed
+        tournament_list_with_players = [
+            x
+            for x in tournament_list_db.get_list_of_tournaments()
+            if (
+                len(x.get_tournament_rounds()) > 0
+                and len(x.get_tournament_rounds()) < x.get_tournament_round_number()
+                and x.get_tournament_last_closed_round() is not None
+            )
+        ]
+        # prompt the user for what tournament its next round is to be created
+        tournament_id = new_tournament_view.prompt_for_tournament_id(tournament_list_with_players)
+        if tournament_id is not None:
+            tournament_id = int(tournament_id)
+            selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
+            # do the next pairing of players == pairing step2
+            (list_paired_match, odd_winner_id) = selected_tournament.pair_players_next_time()
+            # get the previous round name
+            former_round = selected_tournament.get_tournament_last_closed_round()
+            # and its name
+            former_round_name = former_round.get_round_name()
+            # and the planned number of rounds
+            number_rounds_tournament = selected_tournament.get_tournament_round_number()
+            # how many digits for the numbering
+            indice = 2 if number_rounds_tournament > 9 and number_rounds_tournament < 99 else 1
+            # retrieve the nummer of the former round
+            former_round_number = former_round_name[(len(former_round_name) - indice):]
+            # check if its numerical & add 1
+            next_round_number = int(former_round_number) + 1 if former_round_number.isdigit() else 2
+            next_round_name = former_round_name[: len(former_round_name) - indice] + str(next_round_number)
+            # create the new round
+            next_round = Round(
+                next_round_name,
+                datetime.date.today(),
+                datetime.datetime.now().time(),
+            )
+            # Generate matches from pairing -1 if odd player #
+            for i in range(len(list_paired_match)):
+                new_match = list_paired_match[i]
+                next_round.add_match(new_match)
+            # odd player plays against himself and scores 1
+            # if odd_winner_id:
+            #     # will be granted victory later
+            #     winner_match = (odd_winner_id, odd_winner_id)
+                # # create a match against himself for the odd player
+                # next_round.add_match(winner_match)
+            # add the round with its matches to the tournament
+            selected_tournament.add_round(next_round)
+            # and save them into DB
+            selected_tournament.save_tournament(selected_tournament, selected_tournament.get_tournament_id())
+
+    def show_the_tournament(self):
+        """Show the tournaments."""
+        tournament_list_db = self.init_tournament()
+        # get the players from DB
+        player_list_db = self.init_player()
+        # prepare the  view of the list of tournaments
+        tournaments_view = TournamentsView()
+        # show the tournaments and their players
+        tournaments_view.print_tournaments(
+            tournament_list_db.get_list_of_tournaments(),
+            player_list_db.get_players_by_rank(),
+        )
+
     def run(self):
-        """ """
+        """Manage the Tournament menu & option chosen."""
         self.menu = Menu("Gérer les tournois")
 
         for key, value in MENU_TOURNAMENT.items():
@@ -134,17 +256,7 @@ class MenuTournamentController:
 
         # Show the tournaments
         if chosen_option == "10":
-            # get the tournaments from DB
-            tournament_list_db = self.init_tournament()
-            # get the players from DB
-            player_list_db = self.init_player()
-            # prepare the  view of the list of tournaments
-            tournaments_view = TournamentsView()
-            # show the tournaments and their players
-            tournaments_view.print_tournaments(
-                tournament_list_db.get_list_of_tournaments(),
-                player_list_db.get_players_by_rank(),
-            )
+            self.show_the_tournament()
 
         # Create a tournament
         if chosen_option == "20":
@@ -180,47 +292,7 @@ class MenuTournamentController:
 
         # open the tournament & create the first round & matchs
         if chosen_option == "40":
-            # get the tournaments from DB
-            tournament_list_db = self.init_tournament()
-            new_tournament_view = TournamentView()
-            # remove tournament having less than 2 players
-            # also remove tournament having already rounds
-            tournament_list_with_players = [
-                x
-                for x in tournament_list_db.get_list_of_tournaments()
-                if len(x.get_tournament_players()) > 1 and len(x.get_tournament_rounds()) == 0
-            ]
-            tournament_id = new_tournament_view.prompt_for_tournament_id(tournament_list_with_players)
-            if tournament_id is not None:
-                tournament_id = int(tournament_id)
-                selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
-                # save only player's id, not full Player class
-                # do the initial pairing of players
-                (
-                    list_paired_match,
-                    odd_winner_id,
-                ) = selected_tournament.pair_players_first_time()
-                # create the initial round
-                num_ronde = 1
-                round_first = Round(
-                    "Ronde" + str(num_ronde),
-                    datetime.date.today(),
-                    datetime.datetime.now().time(),
-                )
-                # Next generate matches from initial pairing
-                for i in range(len(list_paired_match)):
-                    new_match = list_paired_match[i]
-                    round_first.add_match(new_match)
-                # odd player plays against himself and scores 1
-                if odd_winner_id:
-                    # will be granted victory later
-                    winner_match = (odd_winner_id, odd_winner_id)
-                    # create a match against himself for the odd player
-                    round_first.add_match(winner_match)
-                # add the round with its matches to the tournament
-                selected_tournament.add_round(round_first)
-                # and save them into DB
-                selected_tournament.save_tournament(selected_tournament, selected_tournament.get_tournament_id())
+            self.open_tournament_create_first_round()
 
         # Finishing of a given Round of a given Tournament : time's over!
         if chosen_option == "50":
@@ -286,76 +358,7 @@ class MenuTournamentController:
 
         # create the next round & matchs == pairing step 2+
         if chosen_option == "70":
-
-            # get the tournaments from DB
-            # [M] possibilité de transformer ces 2 lignes en méthodes
-            tournament_list_db = self.init_tournament()
-            new_tournament_view = TournamentView()
-
-            # remove tournaments not having the first round over
-            # & their # of rounds not yet reached
-            # & the previous round not closed
-            tournament_list_with_players = [
-                x
-                for x in tournament_list_db.get_list_of_tournaments()
-                if len(x.get_tournament_rounds()) > 0
-                and len(x.get_tournament_rounds()) < x.get_tournament_round_number()
-                and x.get_tournament_last_closed_round() is not None
-            ]
-
-            # TODO: when & how to inform the user when the # of rounds was reached : at result registration?
-            # prompt the user for what tournament its next round is to be created
-            tournament_id = new_tournament_view.prompt_for_tournament_id(tournament_list_with_players)
-            if tournament_id is not None:
-                tournament_id = int(tournament_id)
-                selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
-
-                # do the next pairing of players == pairing step2
-                (
-                    list_paired_match,
-                    odd_winner_id,
-                ) = selected_tournament.pair_players_next_time()
-
-                # get the previous round name
-                former_round = selected_tournament.get_tournament_last_closed_round()
-                # and its name
-                former_round_name = former_round.get_round_name()
-                # and the planned number of rounds
-                number_rounds_tournament = selected_tournament.get_tournament_round_number()
-                # how many digits for the numbering
-                if number_rounds_tournament > 9 and number_rounds_tournament < 99:
-                    indice = 2
-                else:
-                    indice = 1
-                # retrieve the nummer of the former round
-                former_round_number = former_round_name[len(former_round_name) - indice :]
-                # check if its numerical & add 1
-                if former_round_number.isdigit():
-                    next_round_number = int(former_round_number) + 1
-                else:
-                    next_round_number = 2
-                next_round_name = former_round_name[: len(former_round_name) - indice] + str(next_round_number)
-
-                # create the new round
-                next_round = Round(
-                    next_round_name,
-                    datetime.date.today(),
-                    datetime.datetime.now().time(),
-                )
-                # Generate matches from pairing
-                for i in range(len(list_paired_match)):
-                    new_match = list_paired_match[i]
-                    next_round.add_match(new_match)
-                # odd player plays against himself and scores 1
-                if odd_winner_id:
-                    # will be granted victory later
-                    winner_match = (odd_winner_id, odd_winner_id)
-                    # create a match against himself for the odd player
-                    next_round.add_match(winner_match)
-                # add the round with its matches to the tournament
-                selected_tournament.add_round(next_round)
-                # and save them into DB
-                selected_tournament.save_tournament(selected_tournament, selected_tournament.get_tournament_id())
+            self.create_next_round_and_match()
 
         # close a tournament by computing the score and update the participant's
         if chosen_option == "75":
@@ -391,22 +394,27 @@ class MenuTournamentController:
 
 
 class MenuReportController:
+    """Manage the Report menu."""
+
     def __init__(self):
+        """Class init to hold the menu instance."""
         self.menu = None
 
     def init_player(self):
+        """Initiate the DB connection to Player table."""
         player_list = Players()
         player_list.load_players()
         return player_list
 
     def init_tournament(self):
+        """Initiate the DB connection to tournament table."""
         tournament_list = Tournaments()
         tournament_list.load_tournaments()
 
         return tournament_list
 
     def run(self):
-        """ """
+        """Manage the Report menu & option chosen."""
         self.menu = Menu("Gérer les rapports")
 
         for key, value in MENU_REPORT.items():
@@ -529,11 +537,14 @@ class MenuReportController:
 
 
 class MenuExitController:
+    """Manage the Exit menu."""
+
     def __init__(self):
+        """Class init to hold the menu instance."""
         self.menu = None
 
     def run(self):
-        """ """
+        """Manage the Exit menu."""
         self.menu = Menu("Quitter l'application")
         return MenuView(self.menu).good_bye()
 
