@@ -1,6 +1,6 @@
 #! /usr/bin/env Python3
 # coding: utf-8
-"""Present to the user all views with terminal interface."""
+"""Present to the user the application's view with terminal interface."""
 from typing import List
 import datetime
 from utils.constants import CLEAR_TERMINAL, YESORNO, GENDER, CONTROLS, SCORE, ESCAPE_KEY
