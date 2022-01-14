@@ -2,7 +2,8 @@
 max-line-length = 119
 max-function-length=50
 doctests = True
-
+# no time yet to divide __init__ or create a factory fonction
+ignore = CFQ002 
 exclude=
     # unworthy time & CPU consomption
     .gitignore,

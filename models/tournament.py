@@ -1,7 +1,6 @@
 #! /usr/bin/env Python3
 # coding: utf-8
-""" tournament.
-    """
+"""Data model for managing Tournament."""
 from datetime import datetime, date
 from utils.constants import ROUND_DEFAULT, CONTROLS, DB_TABLE_TOURNAMENT, ROUND_STATUS
 from utils.database import Database
@@ -12,6 +11,7 @@ class Match:
     """Match is the result of 2 players during one round."""
 
     def __init__(self, player1_id, player2_id):
+        """Match class init is two players scoring against each other."""
         self._player1_id = player1_id
         self._player2_id = player2_id
         self._score_player1 = 0.0
@@ -22,39 +22,41 @@ class Match:
         )
 
     def __repr__(self):
+        """Improve readability when output."""
         return f"""([{self._player1_id}, {self._score_player1}],""" f"""[{self._player2_id}, {self._score_player2}])"""
 
     def __str__(self):
+        """Improve readability when printed."""
         return (
             f""" ====>  blanc {self._player1_id}: {self._score_player1},"""
             f"""noir {self._player2_id}: {self._score_player2} """
         )
 
     def set_match_score(self, score_player1, score_player2):
-        """score setter."""
+        """Score setter."""
         self._score_player1 = float(score_player1)
         # initially they are both at 0
         # self._score_player2 = 1.0 - self._score_player1
         self._score_player2 = float(score_player2)
 
     def get_match(self):
-        """returns match formatted."""
+        """Match formatted getter."""
         return self._formated_match
 
     def get_match_score1(self):
-        """returns score of player 1."""
+        """Score of player 1 getter."""
         return self._score_player1
 
     def get_match_score2(self):
-        """returns score of player 2."""
+        """Score of player 2 getter."""
         return self._score_player2
 
     def get_match_player1(self):
-        """returns match formatted."""
+        """Player of a match ID getter."""
         return self._player1_id
 
     def get_match_player2(self):
-        """returns match formatted."""
+        """Player 2 of a match ID getter."""
         return self._player2_id
 
     def is_match_closed(self):
@@ -66,8 +68,7 @@ class Match:
         return match_closed
 
     def serialize_match(self):
-        """provide serialized version of one match"""
-
+        """Serialize one match."""
         return (
             [str(self._player1_id), str(self._score_player1)],
             [str(self._player2_id), str(self._score_player2)],
@@ -75,7 +76,7 @@ class Match:
 
 
 class Round:
-    """round is a list of matches
+    """Round is a list of matches.
 
     Round is added after pairing players
     """
@@ -89,6 +90,7 @@ class Round:
         round_end_time=None,
         matchs=None,
     ):
+        """Round class init is a start and an end stop time."""
         self._round_name = name
         self._round_start_date = round_date.strftime("%d/%m/%Y")
         self._round_start_time = round_time.strftime("%Hh%Mm%Ss")
@@ -99,11 +101,11 @@ class Round:
         # self._round_status = ROUND_STATUS[0]
 
     def get_round_name(self):
-        """round name getter."""
+        """Round name getter."""
         return self._round_name
 
     def get_round_status(self):
-        """status of one round getter.
+        """Status of one round getter.
 
         The statuses of a round are 0: encours, 1: finie, 2: close
 
@@ -122,24 +124,24 @@ class Round:
         return self._round_status
 
     def close_round(self):
-        """closing a round."""
+        """Close a round."""
         self._round_end_date = date.today().strftime("%d/%m/%Y")
         self._round_end_time = datetime.now().time().strftime("%Hh%Mm%Ss")
 
     def add_match(self, new_match):
-        """adding a match to a round from a list."""
+        """Add a match to a round from a list."""
         self._matchs.append(Match(new_match[0], new_match[1]))
 
     def remove_matchs(self):
-        """remove the list of match attached to the round."""
+        """Remove the list of match attached to the round."""
         self._matchs = []
 
     def get_matchs(self):
-        """match list getter."""
+        """Match list getter."""
         return self._matchs
 
     def serialize_datetime(self, date_time_object):
-        """support json serialization of datatime objects"""
+        """Serialise to json format of datatime objects."""
         if isinstance(date_time_object, datetime.datetime):
             return date_time_object.__str__()
         elif isinstance(date_time_object, datetime.date):
@@ -148,7 +150,7 @@ class Round:
             return date_time_object
 
     def __str__(self):
-
+        """Improve readability when printed."""
         encours = ROUND_STATUS[0]
         finie = ROUND_STATUS[1]
         close = ROUND_STATUS[2]
@@ -167,7 +169,7 @@ class Round:
         return belle_ronde
 
     def serialize_round(self):
-        """provide serialized version of one round"""
+        """Serialise one round."""
         matchs_serialized = []
         for match in self._matchs:
             matchs_serialized.append(match.serialize_match())
@@ -181,7 +183,7 @@ class Round:
         }
 
     def get_player_score_opponent_round(self):
-        """Walk the matches of the given round and retrieve sum of score for all players
+        """Walk the matches of the given round and retrieve sum of score for all players.
 
         input: round to walk thru
         output: dict of player_id with their summed scores
@@ -235,6 +237,7 @@ class Tournament:
         score_updated=False,
         tournament_id=0,
     ):
+        """Tournament class init is a list of players and of rounds."""
         self._event_name = name
         self._event_description = description
         self._event_location = location
@@ -253,36 +256,39 @@ class Tournament:
         )
 
     def __str__(self):
+        """Improve readability when printed."""
         return self._formated_tournament
 
     def get_tournament_id(self):
-        """tournament_id getter"""
+        """Tournament_id getter."""
         return self.__tournament_id
 
     def __lt__(self, obj):
+        """Order of tournaments on id's."""
         return (self.__tournament_id) < (obj.get_tournament_id())
 
     def __eq__(self, obj):
+        """Equal tournaments on id's."""
         return (self.__tournament_id) == (obj.get_tournament_id())
 
     def get_tournament_players(self):
-        """list of participant's id getter"""
+        """List of participant's id getter."""
         return self._players
 
     def get_tournament_score_status(self):
-        """to know oif score updated on players getter"""
+        """Score updated on players getter."""
         return self._score_updated
 
     def set_tournament_score_status(self):
-        """to know oif score updated on players setter"""
+        """Score updated on players setter."""
         self._score_updated = True
 
     def get_tournament_round_number(self):
-        """max of round  getter"""
+        """Max of round  getter."""
         return self._round_number
 
     def get_tournament_rounds(self):
-        """list of rounds getter
+        """List of rounds getter.
 
         output: list of rounds
         """
@@ -294,7 +300,7 @@ class Tournament:
         return self._rounds
 
     def get_tournament_rounds_matchs(self):
-        """list of rounds & matchs getter
+        """List of rounds & matchs getter.
 
         output: list of tuples (ronde, list of matchs)
         """
@@ -305,7 +311,7 @@ class Tournament:
         return list_rounds
 
     def get_tournament_to_finish_round(self):
-        """current round only started getter
+        """Get the current round only started.
 
         output: round or none
 
@@ -318,7 +324,7 @@ class Tournament:
         return round_found
 
     def get_tournament_last_closed_round(self):
-        """last round getter
+        """Last closed round getter.
 
         output: round or none
 
@@ -336,7 +342,7 @@ class Tournament:
         return round_found
 
     def get_tournament_to_close_round(self):
-        """current round waiting results getter
+        """Get the current round waiting for results.
 
         output: round or none
         this round is the one waiting for result to be registred
@@ -349,7 +355,7 @@ class Tournament:
         return round_found
 
     def get_tournament_players_by_name(self):
-        """list of participant's id sorted by name getter"""
+        """List of participant's id sorted by name getter."""
         list_players = []
         # get the full player from player_id
         player_list_db = Players()
@@ -367,7 +373,7 @@ class Tournament:
         return list_players
 
     def get_tournament_players_by_rank(self):
-        """list of participant's id sorted by rank getter"""
+        """List of participant's id sorted by rank getter."""
         list_players = []
         # get the full player from player_id
         player_list_db = Players()
@@ -385,7 +391,7 @@ class Tournament:
         return list_players
 
     def pair_players_first_time(self):
-        """takes the list of player registred sort it by rank and split in two half"""
+        """Sort by rank the list of player registred and split in two half."""
         list_players = []
         # get the full player from player_id
         player_list_db = Players()
@@ -424,7 +430,7 @@ class Tournament:
 
     @staticmethod
     def merge_add_dict(dict1, dict2, type):
-        """add the value of dict2 to the value of dict1 for the key"""
+        """Add the value of dict2 to the value of dict1 for the key."""
         for key, value in dict2.items():
             if key in dict1:
                 if type == "float":
@@ -438,21 +444,14 @@ class Tournament:
                 dict1[key] = value
         return dict1
 
-    def pair_players_next_time(self):
-        """takes the list of player registred sort it by score then ELO and split in two half"""
-
-        list_players = []
-        # get the full player from player_id
-        player_list_db = Players()
-        player_list_db.load_players()
-        # get all tournaments for former scores & opponents
+    def get_all_players_scores_opponents(self):
+        """Get from tournaments  former scores & opponents."""
         tournament_list_db = Tournaments()
         tournament_list_db.load_tournaments()
         all_tournament_list = tournament_list_db.get_list_of_tournaments()
         # walk the tournaments & retrieve all rounds
-        # all tournaments, all rounds but the current WIP one,
-        former_players_scores = {}
-        former_players_opponents = {}
+        all_players_scores = {}
+        all_players_opponents = {}
         for tournoi in all_tournament_list:
             rounds_list = tournoi.get_tournament_rounds()
             for ronde in rounds_list:
@@ -462,27 +461,31 @@ class Tournament:
                 if tournoi.get_tournament_id() == self.get_tournament_id():
                     dict_opponent = ronde.get_player_score_opponent_round()[1]
                 # player's score is the sum of point from previous matches
-                self.merge_add_dict(former_players_scores, dict_score, "float")
-                # TODO: opponent list: should remove the player himself and remove duplicate
-                self.merge_add_dict(former_players_opponents, dict_opponent, "list")
+                self.merge_add_dict(all_players_scores, dict_score, "float")
+                self.merge_add_dict(all_players_opponents, dict_opponent, "list")
+        return (all_players_scores, all_players_opponents)
 
+    def pair_players_next_time(self):
+        """Sort the list of player by score and make matchs."""
+        list_players = []
+        player_list_db = Players()
+        player_list_db.load_players()
+        # get all tournaments for former scores & opponents
+        (former_players_scores, former_players_opponents) = self.get_all_players_scores_opponents()
         # build a list of player's attributs from the ones in tournament
         for player_id in self._players:
             player_object = player_list_db.get_player_by_id(player_id)
-            # player removed from DB in meantime
             if player_object is not None:
                 player_score = float(former_players_scores[player_id])
                 player_rank = float(player_object.get_ranking())
                 # mult by million will prioritize score over rank
                 player_combined_rank = (10 ** 6 * player_score) + player_rank
-                # player_combined_rank = (1000000 * player_score) + player_rank
                 list_players.append(
                     [player_id, player_combined_rank, player_score, player_rank, former_players_opponents[player_id]]
                 )
         # sort the list of Player by combined score next rank
         number_participants = len(list_players)
-        # need at least two players for tournament
-        if number_participants > 1:
+        if number_participants > 1:  # need at least two players for tournament
             # position [1] combined_ranking score first
             list_players.sort(key=lambda x: x[1], reverse=True)
             players_sorted = [x[0] for x in list_players]
@@ -496,7 +499,6 @@ class Tournament:
                         # leave when no more players
                         if idx2 == len(black_players) - 1:
                             break
-
                         # move to next competitor if blanc & noir were already opponents
                         if noir not in former_players_opponents[blanc]:
                             # if not, switch places & leave the loop
@@ -505,28 +507,18 @@ class Tournament:
                                 players_sorted[idx_opponent],
                             )
                             break
-
-            # participant # is odd
             participants_is_odd = False
             if (number_participants % 2) == 1:
-                # add the odd==last player in the list
-                # so he will "play" against himself and win
+                # add the odd==last player in the list so he will "play" against himself and win
                 participants_is_odd = True
                 players_sorted.append(players_sorted[-1])
-
             new_match = []
             for i in range(0, len(players_sorted), 2):
                 new_match.append((players_sorted[i], players_sorted[i + 1]))
-
-            print(new_match)
-
-        return (
-            new_match,
-            list_players[number_participants - 1][0] if participants_is_odd else None,
-        )
+        return (new_match, list_players[number_participants - 1][0] if participants_is_odd else None)
 
     def get_tournament_players_by_score(self):
-        """collects the scores from this tournament & return a list"""
+        """Collect the scores of this tournament & return a list."""
         list_players = []
         # get the full player from player_id
         player_list_db = Players()
@@ -549,7 +541,7 @@ class Tournament:
             # player removed from DB in meantime
             if player_object is not None:
 
-                list_players.append((player_object, player_earned_points ))
+                list_players.append((player_object, player_earned_points))
         # sort the list of Player by score
         if len(list_players) > 0:
             list_players.sort(key=lambda x: x[1], reverse=True)
@@ -557,7 +549,7 @@ class Tournament:
         return list_players
 
     def update_players_score(self):
-        """collects the scores from this non closed tournament & add them to the player's & closes the tournament"""
+        """Collect the scores of non closed tournament & add them to the player's & close it."""
         # get the full player from player_id
         player_list_db = Players()
         player_list_db.load_players()
@@ -585,25 +577,25 @@ class Tournament:
             self.set_tournament_score_status()
 
     def add_player_to_tournament(self, new_player: int):
-        """ask for and register a player to the tournament."""
+        """Ask for and register a player to the tournament."""
         if new_player not in self._players:
             self._players.append(new_player)
 
     def add_players_to_tournament(self, new_player: list):
-        """ask for and register player's ids to the tournament."""
+        """Ask for and register player's ids to the tournament."""
         self._players.extend(new_player)
 
     def close_tournament(self):
-        """close the tournament"""
+        """Close the tournament."""
         self._event_closing_date = date.today()
 
     def add_round(self, new_round: Round):
-        """add a round to the tournament."""
+        """Add a round to the tournament."""
         if len(self._rounds) <= self._round_number:
             self._rounds.append(new_round)
 
     def serialize_tournament(self):
-        """provide serialized version of one tournament"""
+        """Serialise one tournament."""
         rounds_serialized = []
         for ronde in self._rounds:
             rounds_serialized.append(ronde.serialize_round())
@@ -623,7 +615,7 @@ class Tournament:
         }
 
     def save_tournament(self, new_tournament, tournament_id=None):
-        """Save one tournament
+        """Save one tournament.
 
         Save uses the fact that a class has a description as dictionnary
         the meta structure record is avoided.
@@ -638,7 +630,7 @@ class Tournament:
             )
 
     def load_round(self, serialized_rounds):
-        """Load saved rounds into class Round()
+        """Load saved rounds into class Round().
 
         input: dict of one round
         """
@@ -667,7 +659,7 @@ class Tournament:
         )
 
     def load_tournament(self, tournament_id):
-        """Load one saved tournament into Tournament()"""
+        """Load one saved tournament into Tournament()."""
         __serialized_tournament = Database().get_table_id(DB_TABLE_TOURNAMENT, tournament_id)
 
         tournoi = Tournament(
@@ -695,14 +687,15 @@ class Tournaments:
     """List of tournaments."""
 
     def __init__(self):
+        """Tournaments class init is a list of known tournaments."""
         self._tournaments = []
 
     def get_list_of_tournaments(self):
-        """list of all tournaments"""
+        """Get the list of all tournaments."""
         return self._tournaments
 
     def get_tournament_by_id(self, tournament_id):
-        """return one tournament based on its id"""
+        """Return one tournament based on its id."""
         found_tournament = None
         for tournament in self._tournaments:
             if tournament.get_tournament_id() == tournament_id:
@@ -710,7 +703,7 @@ class Tournaments:
         return found_tournament
 
     def load_tournaments(self):
-        """Load saved tournaments into Tournaments()"""
+        """Load saved tournaments into Tournaments()."""
         __serialized_tournaments = []
         __serialized_tournaments = Database().get_table_all(DB_TABLE_TOURNAMENT)
         for tournoi in __serialized_tournaments:
