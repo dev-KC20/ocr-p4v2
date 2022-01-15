@@ -167,13 +167,6 @@ class MenuTournamentController:
                 new_match = list_paired_match[i]
                 round_first.add_match(new_match)
             # odd player plays against himself and scores 1
-            # TODO: if odd too many matchs for the oddp player
-            # if odd_winner_id:
-            #     # will be granted victory later
-            #     winner_match = (odd_winner_id, odd_winner_id)
-            #     # create a match against himself for the odd player
-            #     round_first.add_match(winner_match)
-            # add the round with its matches to the tournament
             selected_tournament.add_round(round_first)
             # and save them into DB
             selected_tournament.save_tournament(selected_tournament, selected_tournament.get_tournament_id())
