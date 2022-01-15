@@ -6,7 +6,6 @@
 *.cfg
 *.data
 data/
-flake8_report/
 flake8_dashboard/
 
 # local settings
