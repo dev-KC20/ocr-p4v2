@@ -266,7 +266,9 @@ dans votre environnement virtuel sous le prompt bash python :
 
 1. d'installer les paquets requis pour mémoire,   
         ``` pip install flake8  
-2. d'executer le script  
+2. d'installer les paquets requis pour mémoire,   
+        ``` pip install flake8-html  
+3. d'executer le script  
         ``` flake8 --format=html --htmldir=flake8_report  
   
 Pour respecter certaines demandes du cahier des charges, le fichier de configuration ".flake8" a été adapté :  
