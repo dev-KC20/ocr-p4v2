@@ -233,9 +233,11 @@ il est conseillé sous le prompt bash python (ici cmd Anaconda3 sous Windows 11)
 5. d'installer les paquets requis pour mémoire,   
         ``` pip install -r requirements.txt  
 
-6. d'executer le script  
-        ``` python main.py  
+6. créer un répertoire data sous le répertoire courant ocr-p4v2, sous windows
+        ``` mkdir data  
 
+7. d'executer le script  
+        ``` python main.py  
   
 Le logiciel stocke les données dans un fichier texte au format json sous un répertoire "data". Assurez-vous que le logiciel ait les droits de créer le répertoire "data" et le fichier "db.json" (alternativement "dbtest.json").  
 
