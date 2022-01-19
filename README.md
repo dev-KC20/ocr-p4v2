@@ -216,7 +216,7 @@ Par ailleurs, nous vous recommandons de mettre à jour l'application périodique
 ## Installation.
 
 Pour utiliser l'application,   
-il est conseillé sous le prompt bash python (ici cmd Anaconda3 sous Windows 11):  
+il est conseillé sous le prompt bash python (ici cmd Anaconda3 sous Windows 10):  
 
 1. de cloner l'ensemble du répertoire github dans un répertoire local dédié.  
         ``` git clone https://github.com/dev-KC20/ocr-p4v2.git  
@@ -233,8 +233,8 @@ il est conseillé sous le prompt bash python (ici cmd Anaconda3 sous Windows 11)
 5. d'installer les paquets requis pour mémoire,   
         ``` pip install -r requirements.txt  
 
-6. créer un répertoire data sous le répertoire courant ocr-p4v2, sous windows
-        ``` mkdir data  
+6. créer un répertoire data sous le répertoire courant ocr-p4v2, sous windows  
+        ``` mkdir data   
 
 7. d'executer le script  
         ``` python main.py  
