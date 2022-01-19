@@ -584,10 +584,14 @@ class Tournament:
         """Ask for and register a player to the tournament."""
         if new_player not in self._players:
             self._players.append(new_player)
+        # remove duplicates as append order doesn't matter
+        self._players = list(set(self._players))
 
-    def add_players_to_tournament(self, new_player: list):
+    def add_players_to_tournament(self, new_players: list):
         """Ask for and register player's ids to the tournament."""
-        self._players.extend(new_player)
+        self._players.extend(new_players)
+        # remove duplicates as append order doesn't matter
+        self._players = list(set(self._players))
 
     def close_tournament(self):
         """Close the tournament."""

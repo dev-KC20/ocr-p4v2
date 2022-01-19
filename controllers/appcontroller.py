@@ -213,13 +213,7 @@ class MenuTournamentController:
             for i in range(len(list_paired_match)):
                 new_match = list_paired_match[i]
                 next_round.add_match(new_match)
-            # odd player plays against himself and scores 1
-            # if odd_winner_id:
-            #     # will be granted victory later
-            #     winner_match = (odd_winner_id, odd_winner_id)
-            # # create a match against himself for the odd player
-            # next_round.add_match(winner_match)
-            # add the round with its matches to the tournament
+
             selected_tournament.add_round(next_round)
             # and save them into DB
             selected_tournament.save_tournament(selected_tournament, selected_tournament.get_tournament_id())
@@ -252,13 +246,14 @@ class MenuTournamentController:
         player_list_db = self.init_player()
         # prepare the  view for selecting one player
         new_tournament_view = TournamentView()
-        player_id = int(new_tournament_view.prompt_for_player_id(player_list_db.get_list_of_players()))
-        # create a tournament object from its tournament id
-        selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
-        # save only player's id, not full Player class
-        selected_tournament.add_player_to_tournament(player_id)
-        # provide tournament_id to update existing tournament
-        selected_tournament.save_tournament(selected_tournament, tournament_id)
+        player_id_list = new_tournament_view.prompt_for_player_id(player_list_db.get_list_of_players())
+        if player_id_list is not None:
+            # create a tournament object from its tournament id
+            selected_tournament = tournament_list_db.get_tournament_by_id(tournament_id)
+            # save only player's id, not full Player class
+            selected_tournament.add_players_to_tournament(player_id_list)
+            # provide tournament_id to update existing tournament
+            selected_tournament.save_tournament(selected_tournament, tournament_id)
 
     def close_tournament_round(self):
         """Close the round accordingly to time control."""

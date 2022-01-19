@@ -193,18 +193,18 @@ class TournamentView(View):
             start_date = View().prompt(
                 "la date du tournoi (JJ/MM/AAAA): ",
                 "date",
-                datetime.date(2021, 12, 29).strftime("%d/%m/%Y"),
+                datetime.date(2022, 1, 20).strftime("%d/%m/%Y"),
             )
             closing_date = View().prompt(
                 "la date du tournoi (JJ/MM/AAAA): ",
                 "date",
-                datetime.date(2021, 12, 29).strftime("%d/%m/%Y"),
+                datetime.date(2022, 1, 20).strftime("%d/%m/%Y"),
             )
             round_number = View().prompt("le nombre de ronde (défaut=4): ", "int", 4)
             time_control = View().prompt(
                 "le type de partie : ",
                 "str",
-                CONTROLS[0],
+                CONTROLS[1],
                 CONTROLS,
             )
 
@@ -256,22 +256,28 @@ class TournamentView(View):
     def prompt_for_player_id(self, player_set: List[Player]):
         """Prompt for id."""
         self.play_once = False
+        results_player1 = []
+        print(CLEAR_TERMINAL)
+        PlayersView().print_players(player_set, ask_confirm=False)
         while not self.play_once:
-            print(CLEAR_TERMINAL)
             line_len = 50
             print("*" * line_len)
             print(" Choisir un joueur ")
             print("*" * line_len)
             print()
-            PlayersView().print_players(player_set)
-            player_id = View().prompt("entrez l'id du joueur", "int", 1)
+            player_id = View().prompt("entrez l'id du joueur ", "int",1)
             print()
             print("*" * line_len)
             # not asking confirmation to speed up UI
-            self.play_once = True
+            if player_id is None:
+                self.play_once = True
+            else:
+                results_player1.append(player_id)
             # self.play_once = View().prompt_to_exit("Entrer pour valider")
+        if len(results_player1) == 0:
+            results_player1 = None
 
-        return player_id
+        return results_player1
 
 
 class TournamentsView(View):
