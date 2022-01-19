@@ -13,8 +13,9 @@ class Database:
         """Database class init to connect to the DB file."""
         try:
             self.__db = TinyDB(DB_LOCATION, sort_keys=True)
-        except FileNotFoundError:
+        except FileNotFoundError() as e:
             print("Avez-vous bien installé un répertoire data pour y loger le fichier json de la base ?")
+            print("Exception levée : ", e)
 
     def __open_table(self, table):
         """Open the table in parm."""
